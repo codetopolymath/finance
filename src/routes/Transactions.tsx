@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { AlertTriangle, Search, SearchX } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import {
@@ -13,67 +13,66 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { EmptyState } from '@/components/finance/EmptyState'
 import { TransactionRow } from '@/components/finance/TransactionRow'
 import { TransactionDetailDrawer } from '@/components/finance/TransactionDetailDrawer'
-import { useTransactions } from '@/lib/queries'
+import { useInfiniteTransactions, useTransactionFilterOptions, type RangeKey } from '@/lib/queries'
 import { groupByDay } from '@/lib/selectors'
 import { getFlowTypeMeta } from '@/lib/flowType'
 import { formatDayHeading } from '@/lib/format'
 import type { Transaction } from '@/types/transaction'
 
-const RANGE_OPTIONS = {
+const RANGE_OPTIONS: Record<RangeKey, string> = {
   'this-month': 'This month',
   'last-month': 'Last month',
   'all-time': 'All time',
-} as const
-type RangeKey = keyof typeof RANGE_OPTIONS
+}
 
-const DAY_BATCH = 10
+const SEARCH_DEBOUNCE_MS = 400
 
-function isInRange(date: Date, range: RangeKey): boolean {
-  if (range === 'all-time') return true
-  const now = new Date()
-  const monthsAgo = range === 'last-month' ? 1 : 0
-  const target = new Date(now.getFullYear(), now.getMonth() - monthsAgo, 1)
-  return date.getFullYear() === target.getFullYear() && date.getMonth() === target.getMonth()
+function useDebouncedValue<T>(value: T, delayMs: number): T {
+  const [debounced, setDebounced] = useState(value)
+  useEffect(() => {
+    const id = setTimeout(() => setDebounced(value), delayMs)
+    return () => clearTimeout(id)
+  }, [value, delayMs])
+  return debounced
 }
 
 export default function Transactions() {
-  const { data, isPending, isError, refetch } = useTransactions()
-  const [search, setSearch] = useState('')
+  const [searchInput, setSearchInput] = useState('')
+  const search = useDebouncedValue(searchInput, SEARCH_DEBOUNCE_MS)
   const [category, setCategory] = useState('all')
   const [flowType, setFlowType] = useState('all')
   const [range, setRange] = useState<RangeKey>('all-time')
-  const [visibleDays, setVisibleDays] = useState(DAY_BATCH)
   const [selected, setSelected] = useState<Transaction | null>(null)
 
-  const categories = useMemo(() => {
-    if (!data) return []
-    return [...new Set(data.map((t) => t.category))].sort()
-  }, [data])
+  const { data: filterOptions } = useTransactionFilterOptions()
 
-  const flowTypes = useMemo(() => {
-    if (!data) return []
-    return [...new Set(data.map((t) => t.flow_type))]
-  }, [data])
+  const {
+    data,
+    isPending,
+    isError,
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteTransactions({ search, category, flowType, range })
 
-  const filtered = useMemo(() => {
-    if (!data) return []
-    const query = search.trim().toLowerCase()
-    return data.filter((t) => {
-      if (!isInRange(new Date(t.txn_at), range)) return false
-      if (category !== 'all' && t.category !== category) return false
-      if (flowType !== 'all' && t.flow_type !== flowType) return false
-      if (query) {
-        const haystack = `${t.vendor ?? ''} ${t.note ?? ''}`.toLowerCase()
-        if (!haystack.includes(query)) return false
-      }
-      return true
-    })
-  }, [data, search, category, flowType, range])
-
-  const dayGroups = useMemo(() => groupByDay(filtered), [filtered])
-  const visibleGroups = dayGroups.slice(0, visibleDays)
-  const hasMore = dayGroups.length > visibleDays
+  const transactions = useMemo(() => data?.pages.flat() ?? [], [data])
+  const dayGroups = useMemo(() => groupByDay(transactions), [transactions])
   const hasActiveFilters = search !== '' || category !== 'all' || flowType !== 'all' || range !== 'all-time'
+
+  const sentinelRef = useRef<HTMLDivElement | null>(null)
+  useEffect(() => {
+    const node = sentinelRef.current
+    if (!node || !hasNextPage) return
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !isFetchingNextPage) fetchNextPage()
+      },
+      { rootMargin: '200px' },
+    )
+    observer.observe(node)
+    return () => observer.disconnect()
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage])
 
   if (isPending) {
     return <TransactionsSkeleton />
@@ -96,8 +95,8 @@ export default function Transactions() {
         <div className="relative flex-1 basis-56">
           <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
             placeholder="Search vendor or note"
             className="pl-8"
           />
@@ -108,7 +107,7 @@ export default function Transactions() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All categories</SelectItem>
-            {categories.map((c) => (
+            {filterOptions?.categories.map((c) => (
               <SelectItem key={c} value={c}>
                 {c}
               </SelectItem>
@@ -121,7 +120,7 @@ export default function Transactions() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All types</SelectItem>
-            {flowTypes.map((ft) => (
+            {filterOptions?.flowTypes.map((ft) => (
               <SelectItem key={ft} value={ft}>
                 {getFlowTypeMeta(ft).label}
               </SelectItem>
@@ -154,7 +153,7 @@ export default function Transactions() {
         />
       ) : (
         <div className="flex flex-col gap-6">
-          {visibleGroups.map((group) => (
+          {dayGroups.map((group) => (
             <div key={group.date.toISOString()}>
               <p className="mb-1 px-2 text-xs font-medium text-muted-foreground">
                 {formatDayHeading(group.date)}
@@ -166,9 +165,17 @@ export default function Transactions() {
               </div>
             </div>
           ))}
-          {hasMore && (
-            <Button variant="outline" onClick={() => setVisibleDays((n) => n + DAY_BATCH)} className="self-center">
-              Load more
+
+          <div ref={sentinelRef} />
+
+          {hasNextPage && (
+            <Button
+              variant="outline"
+              onClick={() => fetchNextPage()}
+              disabled={isFetchingNextPage}
+              className="self-center"
+            >
+              {isFetchingNextPage ? 'Loading…' : 'Load more'}
             </Button>
           )}
         </div>
