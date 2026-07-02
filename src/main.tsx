@@ -5,17 +5,20 @@ import { HashRouter } from 'react-router-dom'
 import './index.css'
 import App from './App.tsx'
 import { AuthProvider } from './lib/auth-context'
+import { ErrorBoundary } from './components/ErrorBoundary'
 
 const queryClient = new QueryClient()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <HashRouter>
-        <AuthProvider>
-          <App />
-        </AuthProvider>
-      </HashRouter>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <HashRouter>
+          <AuthProvider>
+            <App />
+          </AuthProvider>
+        </HashRouter>
+      </QueryClientProvider>
+    </ErrorBoundary>
   </StrictMode>,
 )

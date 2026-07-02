@@ -1,12 +1,15 @@
+import { lazy, Suspense } from 'react'
 import { Route, Routes, useLocation } from 'react-router-dom'
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
 import { Separator } from '@/components/ui/separator'
+import { Skeleton } from '@/components/ui/skeleton'
 import { AppSidebar } from '@/components/finance/AppSidebar'
-import Dashboard from '@/routes/Dashboard'
-import Transactions from '@/routes/Transactions'
-import Insights from '@/routes/Insights'
 import Login from '@/routes/Login'
 import { useAuth } from '@/lib/auth-context'
+
+const Dashboard = lazy(() => import('@/routes/Dashboard'))
+const Transactions = lazy(() => import('@/routes/Transactions'))
+const Insights = lazy(() => import('@/routes/Insights'))
 
 const PAGE_TITLES: Record<string, string> = {
   '/': 'Dashboard',
@@ -33,11 +36,13 @@ function App() {
           <h1 className="text-sm font-medium">{title}</h1>
         </header>
         <div className="flex flex-1 flex-col gap-6 p-4 md:p-6">
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/transactions" element={<Transactions />} />
-            <Route path="/insights" element={<Insights />} />
-          </Routes>
+          <Suspense fallback={<Skeleton className="h-72 w-full" />}>
+            <Routes>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/transactions" element={<Transactions />} />
+              <Route path="/insights" element={<Insights />} />
+            </Routes>
+          </Suspense>
         </div>
       </SidebarInset>
     </SidebarProvider>

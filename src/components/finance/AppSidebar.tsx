@@ -1,3 +1,4 @@
+import { formatDistanceToNow } from 'date-fns'
 import { Link, useLocation } from 'react-router-dom'
 import { LayoutDashboard, ArrowLeftRight, LineChart, LogOut, Wallet } from 'lucide-react'
 import {
@@ -12,6 +13,7 @@ import {
   SidebarMenuItem,
 } from '@/components/ui/sidebar'
 import { useAuth } from '@/lib/auth-context'
+import { useTransactions } from '@/lib/queries'
 
 const NAV_ITEMS = [
   { title: 'Dashboard', url: '/', icon: LayoutDashboard },
@@ -22,6 +24,7 @@ const NAV_ITEMS = [
 export function AppSidebar() {
   const location = useLocation()
   const { session, signOut } = useAuth()
+  const { dataUpdatedAt } = useTransactions()
 
   return (
     <Sidebar collapsible="offcanvas">
@@ -62,6 +65,11 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
+        {dataUpdatedAt > 0 && (
+          <p className="truncate px-2 text-xs text-sidebar-foreground/50">
+            Synced {formatDistanceToNow(dataUpdatedAt, { addSuffix: true })}
+          </p>
+        )}
         {session?.user.email && (
           <p className="truncate px-2 text-xs text-sidebar-foreground/70">{session.user.email}</p>
         )}
