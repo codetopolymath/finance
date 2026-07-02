@@ -1,0 +1,47 @@
+import { Route, Routes, useLocation } from 'react-router-dom'
+import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
+import { Separator } from '@/components/ui/separator'
+import { AppSidebar } from '@/components/finance/AppSidebar'
+import Dashboard from '@/routes/Dashboard'
+import Transactions from '@/routes/Transactions'
+import Insights from '@/routes/Insights'
+import Login from '@/routes/Login'
+import { useAuth } from '@/lib/auth-context'
+
+const PAGE_TITLES: Record<string, string> = {
+  '/': 'Dashboard',
+  '/transactions': 'Transactions',
+  '/insights': 'Insights',
+}
+
+function App() {
+  const location = useLocation()
+  const title = PAGE_TITLES[location.pathname] ?? 'Spendcheck'
+  const { session, loading } = useAuth()
+
+  if (loading) return null
+
+  if (!session) return <Login />
+
+  return (
+    <SidebarProvider>
+      <AppSidebar />
+      <SidebarInset>
+        <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4">
+          <SidebarTrigger className="-ml-1" />
+          <Separator orientation="vertical" className="mr-2 h-4" />
+          <h1 className="text-sm font-medium">{title}</h1>
+        </header>
+        <div className="flex flex-1 flex-col gap-6 p-4 md:p-6">
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/transactions" element={<Transactions />} />
+            <Route path="/insights" element={<Insights />} />
+          </Routes>
+        </div>
+      </SidebarInset>
+    </SidebarProvider>
+  )
+}
+
+export default App
