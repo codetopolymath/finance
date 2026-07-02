@@ -26,7 +26,7 @@ export function CategoryBreakdownChart({ data }: { data: CategoryTotal[] }) {
 
   return (
     <div className="flex flex-col gap-4">
-      <ChartContainer config={chartConfig} className="mx-auto aspect-square max-h-64">
+      <ChartContainer config={chartConfig} className="mx-auto h-64 w-full max-w-64">
         <PieChart>
           <ChartTooltip
             content={
