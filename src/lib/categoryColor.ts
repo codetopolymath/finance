@@ -1,18 +1,45 @@
-const CHART_COLOR_VARS = [
-  'var(--chart-1)',
-  'var(--chart-2)',
-  'var(--chart-3)',
-  'var(--chart-4)',
-  'var(--chart-5)',
+import type { CategoryTotal } from '@/lib/selectors'
+
+/** Fixed, validated 8-hue categorical set (see index.css for the source
+ * values and validation note). Order is fixed and never cycled. */
+const CATEGORY_COLOR_VARS = [
+  'var(--category-1)',
+  'var(--category-2)',
+  'var(--category-3)',
+  'var(--category-4)',
+  'var(--category-5)',
+  'var(--category-6)',
+  'var(--category-7)',
+  'var(--category-8)',
 ]
 
-/** Deterministic category -> chart color, so a given category always gets
- * the same color across the dashboard and insights charts without needing
- * a hardcoded map of every category the ingestion pipeline might produce. */
-export function getCategoryColor(category: string): string {
-  let hash = 0
-  for (let i = 0; i < category.length; i++) {
-    hash = (hash * 31 + category.charCodeAt(i)) >>> 0
+const OTHER_COLOR_VAR = 'var(--category-other)'
+const OTHER_LABEL = 'Other'
+
+export interface ColoredCategoryTotal extends CategoryTotal {
+  color: string
+}
+
+/** Assigns each of the top 8 categories (by total, already sorted by
+ * categoryBreakdown) a fixed, distinct slot color. Categories beyond the 8th
+ * are folded into a single "Other" bucket rather than reusing or generating
+ * hues — an unbounded category count can otherwise collide or crowd the
+ * legend. */
+export function assignCategoryColors(categories: CategoryTotal[]): ColoredCategoryTotal[] {
+  const visible = categories.slice(0, CATEGORY_COLOR_VARS.length).map((item, index) => ({
+    ...item,
+    color: CATEGORY_COLOR_VARS[index],
+  }))
+
+  const rest = categories.slice(CATEGORY_COLOR_VARS.length)
+  if (rest.length === 0) return visible
+
+  const other: ColoredCategoryTotal = {
+    category: OTHER_LABEL,
+    total: rest.reduce((sum, item) => sum + item.total, 0),
+    count: rest.reduce((sum, item) => sum + item.count, 0),
+    color: OTHER_COLOR_VAR,
   }
-  return CHART_COLOR_VARS[hash % CHART_COLOR_VARS.length]
+
+  return [...visible, other]
 }

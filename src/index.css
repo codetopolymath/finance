@@ -32,6 +32,20 @@
   --chart-3: #8b5cf6;
   --chart-4: #f59e0b;
   --chart-5: #10b981;
+  /* Fixed 8-hue categorical set for the category breakdown chart (kept separate
+   * from --chart-1..5 above, which are brand/single-series colors used
+   * elsewhere). Order is the CVD-safety mechanism — validated as a set with
+   * scripts/validate_palette.js from the dataviz skill; don't reorder or swap
+   * individual hexes without re-validating. */
+  --category-1: #3b82f6;
+  --category-2: #f59e0b;
+  --category-3: #8b5cf6;
+  --category-4: #4fcf94;
+  --category-5: #ef4444;
+  --category-6: #10b981;
+  --category-7: #06b6d4;
+  --category-8: #ec4899;
+  --category-other: #78716c;
   --sidebar: #fcfcfc;
   --sidebar-foreground: #707070;
   --sidebar-primary: #72e3ad;
@@ -72,6 +86,15 @@
     --chart-3: #a78bfa;
     --chart-4: #fbbf24;
     --chart-5: #2dd4bf;
+    --category-1: #3b82f6;
+    --category-2: #d97706;
+    --category-3: #8b5cf6;
+    --category-4: #16a34a;
+    --category-5: #ef4444;
+    --category-6: #0d9488;
+    --category-7: #0891b2;
+    --category-8: #ec4899;
+    --category-other: #a8a29e;
     --sidebar: #121212;
     --sidebar-foreground: #898989;
     --sidebar-primary: #4ade80;

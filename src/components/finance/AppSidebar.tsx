@@ -62,11 +62,14 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
+        {session?.user.email && (
+          <p className="truncate px-2 text-xs text-sidebar-foreground/70">{session.user.email}</p>
+        )}
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton onClick={signOut}>
               <LogOut />
-              <span className="truncate">{session?.user.email ?? 'Sign out'}</span>
+              <span>Sign out</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

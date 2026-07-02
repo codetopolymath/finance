@@ -84,7 +84,7 @@ export default function Transactions() {
       <EmptyState
         icon={AlertTriangle}
         title="Couldn't load transactions"
-        description="Check your connection and try again."
+        description="Check your connection, or sign in again if your session expired."
         action={{ label: 'Retry', onClick: () => refetch() }}
       />
     )
