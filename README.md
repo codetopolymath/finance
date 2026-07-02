@@ -1,33 +1,45 @@
-# React + TypeScript + Vite
+# Spendcheck
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+A private, single-user finance dashboard — scan monthly spend, browse transactions, and track trends without a spreadsheet.
 
-Currently, two official plugins are available:
+**Live**: https://codetopolymath.github.io/finance/
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Product
 
-## React Compiler
+Read-only by design: transactions are ingested elsewhere and land in Supabase; this app's only job is to make sense of them fast.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **Dashboard** — month income/spend/net, category breakdown, recent transactions
+- **Transactions** — search + filter by category/type/date range, grouped by day
+- **Insights** — daily/weekly spend trend, top vendors
 
-## Expanding the Oxlint configuration
+## Stack
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+- **Frontend**: Vite + React 19 + TypeScript, TanStack Query, React Router (`HashRouter`, static-hosting-safe)
+- **UI**: Tailwind v4 + shadcn/ui (Radix primitives), Recharts for charts
+- **Backend**: Supabase (Postgres + Auth) — no custom server, the client talks to Supabase directly
+- **Hosting**: GitHub Pages, built and deployed by GitHub Actions on every push to `main`
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+## Design system
+
+Tokens live in `src/index.css` as CSS custom properties (light + OS-driven dark mode), consumed via Tailwind's `@theme inline`. The category-breakdown chart uses a dedicated, fixed 8-hue categorical palette (`--category-1..8`) validated for lightness, chroma, and colorblind-safe separation — categories beyond 8 fold into a single "Other" bucket rather than generating or reusing hues. Numbers use `tabular-nums` wherever columns need to align.
+
+## Security model
+
+The Supabase anon key is public by necessity (it ships in the client bundle) — access control lives in the database, not the key:
+
+- **Auth**: GitHub OAuth via Supabase Auth (`src/lib/auth-context.tsx`) gates the whole app
+- **Authorization**: Row Level Security on `transactions` restricts reads to one allow-listed email, enforced in Postgres regardless of who holds the anon key
+
+## Local development
+
+```bash
+cp .env.example .env.local   # fill in VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY
+npm install
+npm run dev
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
-# finance
+`npm run build` type-checks then builds; `npm run lint` runs Oxlint.
+
+## Deployment
+
+`.github/workflows/deploy.yml` builds with the `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` repo variables and publishes `dist/` straight to GitHub Pages — no manual build step, no committed build output.
