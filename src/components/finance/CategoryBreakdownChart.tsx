@@ -1,6 +1,4 @@
 import { PieChart as PieChartIcon } from 'lucide-react'
-import { Cell, Pie, PieChart } from 'recharts'
-import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from '@/components/ui/chart'
 import { EmptyState } from '@/components/finance/EmptyState'
 import { formatCurrency } from '@/lib/format'
 import { assignCategoryColors } from '@/lib/categoryColor'
@@ -18,55 +16,36 @@ export function CategoryBreakdownChart({ data }: { data: CategoryTotal[] }) {
   }
 
   const colored = assignCategoryColors(data)
-
-  const chartConfig = colored.reduce((config, item) => {
-    config[item.category] = { label: item.category, color: item.color }
-    return config
-  }, {} as ChartConfig)
+  const total = colored.reduce((sum, item) => sum + item.total, 0)
+  const max = Math.max(...colored.map((item) => item.total))
 
   return (
-    <div className="flex flex-col gap-4">
-      <ChartContainer config={chartConfig} className="mx-auto h-64 w-full max-w-64">
-        <PieChart>
-          <ChartTooltip
-            content={
-              <ChartTooltipContent
-                hideLabel
-                formatter={(value, name, item) => (
-                  <div className="flex w-full items-center justify-between gap-3">
-                    <div className="flex items-center gap-1.5">
-                      <span
-                        className="size-2.5 shrink-0 rounded-[2px]"
-                        style={{ backgroundColor: item.payload.fill }}
-                      />
-                      <span className="text-muted-foreground">{name}</span>
-                    </div>
-                    <span className="font-mono font-medium tabular-nums">
-                      {formatCurrency(Number(value))}
-                    </span>
-                  </div>
-                )}
+    <div className="flex flex-col gap-3">
+      {colored.map((item) => {
+        const percent = total > 0 ? (item.total / total) * 100 : 0
+        return (
+          <div key={item.category} className="flex flex-col gap-1">
+            <div className="flex items-center justify-between gap-2 text-sm">
+              <span className="flex min-w-0 items-center gap-1.5">
+                <span
+                  className="size-2.5 shrink-0 rounded-[2px]"
+                  style={{ backgroundColor: item.color }}
+                />
+                <span className="truncate font-medium">{item.category}</span>
+              </span>
+              <span className="shrink-0 font-mono text-xs tabular-nums text-muted-foreground">
+                {formatCurrency(item.total)} · {percent < 1 ? '<1' : Math.round(percent)}%
+              </span>
+            </div>
+            <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+              <div
+                className="h-full rounded-full"
+                style={{ width: `${(item.total / max) * 100}%`, backgroundColor: item.color }}
               />
-            }
-          />
-          <Pie data={colored} dataKey="total" nameKey="category" innerRadius={50} outerRadius={80} strokeWidth={2}>
-            {colored.map((entry) => (
-              <Cell key={entry.category} fill={entry.color} />
-            ))}
-          </Pie>
-        </PieChart>
-      </ChartContainer>
-      <ul className="flex flex-wrap justify-center gap-x-4 gap-y-1.5 text-sm">
-        {colored.map((item) => (
-          <li key={item.category} className="flex items-center gap-1.5">
-            <span
-              className="size-2.5 shrink-0 rounded-[2px]"
-              style={{ backgroundColor: item.color }}
-            />
-            <span className="text-muted-foreground">{item.category}</span>
-          </li>
-        ))}
-      </ul>
+            </div>
+          </div>
+        )
+      })}
     </div>
   )
 }
