@@ -1,10 +1,12 @@
+import { format } from 'date-fns'
+import { Link } from 'react-router-dom'
 import { PieChart as PieChartIcon } from 'lucide-react'
 import { EmptyState } from '@/components/finance/EmptyState'
 import { formatCurrency } from '@/lib/format'
 import { assignCategoryColors } from '@/lib/categoryColor'
 import type { CategoryTotal } from '@/lib/selectors'
 
-export function CategoryBreakdownChart({ data }: { data: CategoryTotal[] }) {
+export function CategoryBreakdownChart({ data, month }: { data: CategoryTotal[]; month: Date }) {
   if (data.length === 0) {
     return (
       <EmptyState
@@ -18,13 +20,14 @@ export function CategoryBreakdownChart({ data }: { data: CategoryTotal[] }) {
   const colored = assignCategoryColors(data)
   const total = colored.reduce((sum, item) => sum + item.total, 0)
   const max = Math.max(...colored.map((item) => item.total))
+  const monthParam = format(month, 'yyyy-MM-dd')
 
   return (
     <div className="flex flex-col gap-3">
       {colored.map((item) => {
         const percent = total > 0 ? (item.total / total) * 100 : 0
-        return (
-          <div key={item.category} className="flex flex-col gap-1">
+        const row = (
+          <div className="flex flex-col gap-1">
             <div className="flex items-center justify-between gap-2 text-sm">
               <span className="flex min-w-0 items-center gap-1.5">
                 <span
@@ -44,6 +47,24 @@ export function CategoryBreakdownChart({ data }: { data: CategoryTotal[] }) {
               />
             </div>
           </div>
+        )
+
+        if (item.isOther) {
+          return (
+            <div key={item.category} title="Includes several smaller categories">
+              {row}
+            </div>
+          )
+        }
+
+        return (
+          <Link
+            key={item.category}
+            to={`/transactions?category=${encodeURIComponent(item.category)}&month=${monthParam}`}
+            className="-mx-2 rounded-md px-2 py-1 transition-colors hover:bg-accent"
+          >
+            {row}
+          </Link>
         )
       })}
     </div>

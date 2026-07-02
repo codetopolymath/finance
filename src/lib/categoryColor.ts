@@ -18,6 +18,9 @@ const OTHER_LABEL = 'Other'
 
 export interface ColoredCategoryTotal extends CategoryTotal {
   color: string
+  /** True only for the synthetic "Other" bucket — it doesn't correspond to a
+   * single real category value, so callers shouldn't treat it as filterable. */
+  isOther?: boolean
 }
 
 /** Assigns each of the top 8 categories (by total, already sorted by
@@ -39,6 +42,7 @@ export function assignCategoryColors(categories: CategoryTotal[]): ColoredCatego
     total: rest.reduce((sum, item) => sum + item.total, 0),
     count: rest.reduce((sum, item) => sum + item.count, 0),
     color: OTHER_COLOR_VAR,
+    isOther: true,
   }
 
   return [...visible, other]

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { AlertTriangle, Search, SearchX } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import {
@@ -16,10 +17,10 @@ import { TransactionDetailDrawer } from '@/components/finance/TransactionDetailD
 import { useInfiniteTransactions, useTransactionFilterOptions, type RangeKey } from '@/lib/queries'
 import { groupByDay } from '@/lib/selectors'
 import { getFlowTypeMeta } from '@/lib/flowType'
-import { formatDayHeading } from '@/lib/format'
+import { formatDayHeading, formatMonthLabel } from '@/lib/format'
 import type { Transaction } from '@/types/transaction'
 
-const RANGE_OPTIONS: Record<RangeKey, string> = {
+const STATIC_RANGE_OPTIONS: Record<Exclude<RangeKey, 'custom'>, string> = {
   'this-month': 'This month',
   'last-month': 'Last month',
   'all-time': 'All time',
@@ -37,11 +38,16 @@ function useDebouncedValue<T>(value: T, delayMs: number): T {
 }
 
 export default function Transactions() {
+  const [searchParams] = useSearchParams()
+  const linkedCategory = searchParams.get('category')
+  const linkedMonth = searchParams.get('month')
+
   const [searchInput, setSearchInput] = useState('')
   const search = useDebouncedValue(searchInput, SEARCH_DEBOUNCE_MS)
-  const [category, setCategory] = useState('all')
+  const [category, setCategory] = useState(linkedCategory ?? 'all')
   const [flowType, setFlowType] = useState('all')
-  const [range, setRange] = useState<RangeKey>('all-time')
+  const [range, setRange] = useState<RangeKey>(linkedMonth ? 'custom' : 'all-time')
+  const [customMonth] = useState<string | undefined>(linkedMonth ?? undefined)
   const [selected, setSelected] = useState<Transaction | null>(null)
 
   const { data: filterOptions } = useTransactionFilterOptions()
@@ -54,7 +60,7 @@ export default function Transactions() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useInfiniteTransactions({ search, category, flowType, range })
+  } = useInfiniteTransactions({ search, category, flowType, range, customMonth })
 
   const transactions = useMemo(() => data?.pages.flat() ?? [], [data])
   const dayGroups = useMemo(() => groupByDay(transactions), [transactions])
@@ -132,7 +138,10 @@ export default function Transactions() {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {Object.entries(RANGE_OPTIONS).map(([key, label]) => (
+            {customMonth && (
+              <SelectItem value="custom">{formatMonthLabel(new Date(customMonth))}</SelectItem>
+            )}
+            {Object.entries(STATIC_RANGE_OPTIONS).map(([key, label]) => (
               <SelectItem key={key} value={key}>
                 {label}
               </SelectItem>

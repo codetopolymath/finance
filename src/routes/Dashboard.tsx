@@ -55,7 +55,7 @@ export default function Dashboard() {
             <CardTitle className="text-base font-medium">Where it went</CardTitle>
           </CardHeader>
           <CardContent>
-            <CategoryBreakdownChart data={categories} />
+            <CategoryBreakdownChart data={categories} month={month} />
           </CardContent>
         </Card>
 

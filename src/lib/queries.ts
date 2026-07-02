@@ -29,13 +29,16 @@ export function useTransactions() {
   })
 }
 
-export type RangeKey = 'this-month' | 'last-month' | 'all-time'
+export type RangeKey = 'this-month' | 'last-month' | 'all-time' | 'custom'
 
 export interface TransactionFilters {
   search: string
   category: string
   flowType: string
   range: RangeKey
+  /** ISO date (first of month) — only read when range === 'custom', e.g. a
+   * drill-down from Dashboard's month picker to a month that isn't this/last. */
+  customMonth?: string
 }
 
 const PAGE_SIZE = 30
@@ -52,6 +55,21 @@ function monthBounds(monthsAgo: number): { start: Date; end: Date } {
   const start = new Date(now.getFullYear(), now.getMonth() - monthsAgo, 1)
   const end = new Date(now.getFullYear(), now.getMonth() - monthsAgo + 1, 1)
   return { start, end }
+}
+
+function rangeBounds(filters: TransactionFilters): { start: Date; end: Date } | null {
+  if (filters.range === 'all-time') return null
+  if (filters.range === 'custom') {
+    if (!filters.customMonth) return null
+    // Parse as local calendar components, not `new Date(string)` — a bare
+    // "yyyy-MM-dd" string parses as UTC midnight per spec, which silently
+    // rolls back a day in timezones ahead of UTC (e.g. IST).
+    const [year, month] = filters.customMonth.split('-').map(Number)
+    const start = new Date(year, month - 1, 1)
+    const end = new Date(year, month, 1)
+    return { start, end }
+  }
+  return monthBounds(filters.range === 'last-month' ? 1 : 0)
 }
 
 async function fetchTransactionsPage(
@@ -74,9 +92,9 @@ async function fetchTransactionsPage(
   if (filters.flowType !== 'all') {
     query = query.eq('flow_type', filters.flowType)
   }
-  if (filters.range !== 'all-time') {
-    const { start, end } = monthBounds(filters.range === 'last-month' ? 1 : 0)
-    query = query.gte('txn_at', start.toISOString()).lt('txn_at', end.toISOString())
+  const bounds = rangeBounds(filters)
+  if (bounds) {
+    query = query.gte('txn_at', bounds.start.toISOString()).lt('txn_at', bounds.end.toISOString())
   }
 
   const { data, error } = await query
