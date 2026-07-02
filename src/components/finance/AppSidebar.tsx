@@ -1,6 +1,6 @@
 import { formatDistanceToNow } from 'date-fns'
 import { Link, useLocation } from 'react-router-dom'
-import { LayoutDashboard, ArrowLeftRight, LineChart, LogOut, Wallet } from 'lucide-react'
+import { LayoutDashboard, ArrowLeftRight, LineChart, Landmark, LogOut, Wallet } from 'lucide-react'
 import {
   Sidebar,
   SidebarContent,
@@ -19,6 +19,7 @@ const NAV_ITEMS = [
   { title: 'Dashboard', url: '/', icon: LayoutDashboard },
   { title: 'Transactions', url: '/transactions', icon: ArrowLeftRight },
   { title: 'Insights', url: '/insights', icon: LineChart },
+  { title: 'Loans', url: '/loans', icon: Landmark },
 ]
 
 export function AppSidebar() {

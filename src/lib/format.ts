@@ -27,3 +27,15 @@ export function formatTime(date: Date): string {
 export function formatMonthLabel(date: Date): string {
   return format(date, 'MMMM yyyy')
 }
+
+export function formatFullDate(date: Date): string {
+  return format(date, 'EEEE, d MMMM yyyy')
+}
+
+/** Parses a "yyyy-MM-dd" date-only string as local calendar components.
+ * `new Date(string)` treats date-only strings as UTC midnight per spec,
+ * which silently rolls back a day in timezones ahead of UTC (e.g. IST). */
+export function parseDateOnly(value: string): Date {
+  const [year, month, day] = value.split('-').map(Number)
+  return new Date(year, month - 1, day)
+}
