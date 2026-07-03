@@ -97,6 +97,40 @@ export function spendTrend(transactions: Transaction[], granularity: 'day' | 'we
     .map(([time, total]) => ({ date: new Date(time), total }))
 }
 
+export interface HeatmapCell {
+  /** 0 = Sunday, per Date#getDay(). */
+  day: number
+  /** 0-23, local time. */
+  hour: number
+  total: number
+  count: number
+}
+
+/** Outflow (sign -1) totals bucketed by weekday x hour-of-day, in the
+ * viewer's local timezone (matches how every other date/time value in this
+ * app is displayed — see formatTime/formatDateTime). Always returns all 168
+ * buckets, zero-filled, so the heatmap grid never has to guess a missing
+ * cell's position. */
+export function spendHeatmap(transactions: Transaction[]): HeatmapCell[] {
+  const cells: HeatmapCell[] = []
+  for (let day = 0; day < 7; day++) {
+    for (let hour = 0; hour < 24; hour++) {
+      cells.push({ day, hour, total: 0, count: 0 })
+    }
+  }
+
+  for (const t of transactions) {
+    const { sign } = getFlowTypeMeta(t.flow_type)
+    if (sign !== -1) continue
+    const date = new Date(t.txn_at)
+    const cell = cells[date.getDay() * 24 + date.getHours()]
+    cell.total += t.amount
+    cell.count += 1
+  }
+
+  return cells
+}
+
 export function topVendors(transactions: Transaction[], limit = 5): VendorTotal[] {
   const totals = new Map<string, VendorTotal>()
   for (const t of transactions) {

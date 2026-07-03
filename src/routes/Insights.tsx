@@ -5,9 +5,10 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { Skeleton } from '@/components/ui/skeleton'
 import { EmptyState } from '@/components/finance/EmptyState'
 import { SpendTrendChart } from '@/components/finance/SpendTrendChart'
+import { SpendHeatmap } from '@/components/finance/SpendHeatmap'
 import { TopVendors } from '@/components/finance/TopVendors'
 import { useTransactions } from '@/lib/queries'
-import { spendTrend, topVendors } from '@/lib/selectors'
+import { spendHeatmap, spendTrend, topVendors } from '@/lib/selectors'
 
 export default function Insights() {
   const { data, isPending, isError, refetch } = useTransactions()
@@ -15,6 +16,7 @@ export default function Insights() {
 
   const trend = useMemo(() => (data ? spendTrend(data, granularity) : []), [data, granularity])
   const vendors = useMemo(() => (data ? topVendors(data, 5) : []), [data])
+  const heatmap = useMemo(() => (data ? spendHeatmap(data) : []), [data])
 
   if (isPending) {
     return <InsightsSkeleton />
@@ -66,6 +68,23 @@ export default function Insights() {
         </CardHeader>
         <CardContent>
           <TopVendors data={vendors} />
+        </CardContent>
+      </Card>
+
+      <Card className="lg:col-span-5">
+        <CardHeader>
+          <CardTitle className="text-base font-medium">When you spend</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {heatmap.every((cell) => cell.count === 0) ? (
+            <EmptyState
+              icon={TrendingUp}
+              title="Nothing to chart yet"
+              description="This will fill in once there's more spending history."
+            />
+          ) : (
+            <SpendHeatmap data={heatmap} />
+          )}
         </CardContent>
       </Card>
     </div>
