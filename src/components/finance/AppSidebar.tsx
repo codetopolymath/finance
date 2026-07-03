@@ -1,6 +1,15 @@
 import { formatDistanceToNow } from 'date-fns'
 import { Link, useLocation } from 'react-router-dom'
-import { LayoutDashboard, ArrowLeftRight, LineChart, Landmark, LogOut, Wallet } from 'lucide-react'
+import {
+  LayoutDashboard,
+  ArrowLeftRight,
+  LineChart,
+  Landmark,
+  LogOut,
+  Wallet,
+  PlayCircle,
+  Loader2,
+} from 'lucide-react'
 import {
   Sidebar,
   SidebarContent,
@@ -14,6 +23,7 @@ import {
 } from '@/components/ui/sidebar'
 import { useAuth } from '@/lib/auth-context'
 import { useTransactions } from '@/lib/queries'
+import { useTriggerSpendcheck } from '@/lib/spendcheck'
 
 const NAV_ITEMS = [
   { title: 'Dashboard', url: '/', icon: LayoutDashboard },
@@ -26,6 +36,7 @@ export function AppSidebar() {
   const location = useLocation()
   const { session, signOut } = useAuth()
   const { dataUpdatedAt } = useTransactions()
+  const spendcheck = useTriggerSpendcheck()
 
   return (
     <Sidebar collapsible="offcanvas">
@@ -73,6 +84,27 @@ export function AppSidebar() {
         )}
         {session?.user.email && (
           <p className="truncate px-2 text-xs text-sidebar-foreground/70">{session.user.email}</p>
+        )}
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              onClick={() => spendcheck.mutate()}
+              disabled={spendcheck.isPending}
+            >
+              {spendcheck.isPending ? <Loader2 className="animate-spin" /> : <PlayCircle />}
+              <span>{spendcheck.isPending ? 'Starting…' : 'Run spendcheck now'}</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+        {spendcheck.isSuccess && (
+          <p className="truncate px-2 text-xs text-sidebar-foreground/50">
+            Started — check Claude for results
+          </p>
+        )}
+        {spendcheck.isError && (
+          <p className="truncate px-2 text-xs text-destructive">
+            {spendcheck.error instanceof Error ? spendcheck.error.message : 'Failed to start'}
+          </p>
         )}
         <SidebarMenu>
           <SidebarMenuItem>
