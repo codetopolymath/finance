@@ -7,14 +7,16 @@ export interface FlowTypeMeta {
   colorRole: ColorRole
 }
 
-// Known flow_type values today: income, spend, p2p_out. p2p_in/refund are
-// included defensively since the ingestion pipeline may start emitting them.
+// Known flow_type values today: income, spend, p2p_out, debt_repayment.
+// p2p_in/refund are included defensively since the ingestion pipeline may
+// start emitting them.
 const FLOW_TYPE_MAP: Record<string, FlowTypeMeta> = {
   income: { label: 'Income', sign: 1, colorRole: 'success' },
   refund: { label: 'Refund', sign: 1, colorRole: 'success' },
   spend: { label: 'Spend', sign: -1, colorRole: 'destructive' },
   p2p_out: { label: 'Sent', sign: -1, colorRole: 'neutral' },
   p2p_in: { label: 'Received', sign: 1, colorRole: 'neutral' },
+  debt_repayment: { label: 'Debt Repayment', sign: -1, colorRole: 'neutral' },
 }
 
 /** Falls back to a neutral, zero-sign entry for any flow_type the pipeline

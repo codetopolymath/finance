@@ -15,7 +15,9 @@ export interface MonthSummary {
 
 /** Income/spend totals for a set of transactions, driven by each flow_type's
  * sign (see flowType.ts). Unknown flow types (sign 0) are excluded from both
- * totals rather than guessed at. */
+ * totals rather than guessed at. Debt repayment counts as outflow here (it's
+ * real money leaving the account) even though it's excluded from the
+ * discretionary-spend breakdowns below. */
 export function summarize(transactions: Transaction[]): MonthSummary {
   let totalIn = 0
   let totalOut = 0
@@ -25,6 +27,12 @@ export function summarize(transactions: Transaction[]): MonthSummary {
     else if (sign === -1) totalOut += t.amount
   }
   return { totalIn, totalOut, net: totalIn - totalOut }
+}
+
+/** Outflow (sign -1) that counts as discretionary spend, i.e. excludes debt
+ * repayment — EMIs are a committed obligation, not a spending choice. */
+function isDiscretionarySpend(t: Transaction): boolean {
+  return getFlowTypeMeta(t.flow_type).sign === -1 && t.flow_type !== 'debt_repayment'
 }
 
 export interface CategoryTotal {
@@ -38,8 +46,7 @@ export interface CategoryTotal {
 export function categoryBreakdown(transactions: Transaction[]): CategoryTotal[] {
   const totals = new Map<string, CategoryTotal>()
   for (const t of transactions) {
-    const { sign } = getFlowTypeMeta(t.flow_type)
-    if (sign !== -1) continue
+    if (!isDiscretionarySpend(t)) continue
     const existing = totals.get(t.category)
     if (existing) {
       existing.total += t.amount
@@ -86,8 +93,7 @@ export interface TrendPoint {
 export function spendTrend(transactions: Transaction[], granularity: 'day' | 'week'): TrendPoint[] {
   const bucket = new Map<number, number>()
   for (const t of transactions) {
-    const { sign } = getFlowTypeMeta(t.flow_type)
-    if (sign !== -1) continue
+    if (!isDiscretionarySpend(t)) continue
     const date = new Date(t.txn_at)
     const key = (granularity === 'week' ? startOfWeek(date) : startOfDay(date)).getTime()
     bucket.set(key, (bucket.get(key) ?? 0) + t.amount)
@@ -120,8 +126,7 @@ export function spendHeatmap(transactions: Transaction[]): HeatmapCell[] {
   }
 
   for (const t of transactions) {
-    const { sign } = getFlowTypeMeta(t.flow_type)
-    if (sign !== -1) continue
+    if (!isDiscretionarySpend(t)) continue
     const date = new Date(t.txn_at)
     const cell = cells[date.getDay() * 24 + date.getHours()]
     cell.total += t.amount
@@ -134,8 +139,7 @@ export function spendHeatmap(transactions: Transaction[]): HeatmapCell[] {
 export function topVendors(transactions: Transaction[], limit = 5): VendorTotal[] {
   const totals = new Map<string, VendorTotal>()
   for (const t of transactions) {
-    const { sign } = getFlowTypeMeta(t.flow_type)
-    if (sign !== -1 || !t.vendor) continue
+    if (!isDiscretionarySpend(t) || !t.vendor) continue
     const existing = totals.get(t.vendor)
     if (existing) {
       existing.total += t.amount

@@ -1,11 +1,14 @@
+import type { ReactNode } from 'react'
 import { AlertTriangle, Landmark } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { EmptyState } from '@/components/finance/EmptyState'
 import { useLoans } from '@/lib/loanQueries'
 import { summarizeLoan } from '@/lib/loanSelectors'
 import { formatCurrency, formatFullDate, parseDateOnly } from '@/lib/format'
+import { cn } from '@/lib/utils'
 import type { LoanInstallment, LoanWithInstallments } from '@/types/loan'
 
 export default function Loans() {
@@ -58,92 +61,124 @@ function LoanCard({ loan }: { loan: LoanWithInstallments }) {
       </CardHeader>
       <CardContent className="flex flex-col gap-6">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <Stat label="Outstanding" value={formatCurrency(summary.outstanding)} />
-          <Stat
+          <StatCard label="Outstanding" value={formatCurrency(summary.outstanding)} />
+          <StatCard
             label="Next EMI"
             value={
               summary.nextInstallment
-                ? `${formatCurrency(summary.nextInstallment.amount)} · ${formatFullDate(
-                    parseDateOnly(summary.nextInstallment.due_date),
-                  )}`
+                ? formatCurrency(summary.nextInstallment.amount)
                 : 'Fully paid'
             }
+            detail={
+              summary.nextInstallment ? formatFullDate(parseDateOnly(summary.nextInstallment.due_date)) : undefined
+            }
           />
-          <Stat
+          <StatCard
             label="Progress"
-            value={`${Math.round(summary.progressPercent)}% · ${summary.paidCount}/${summary.totalCount} EMIs`}
-          />
+            value={`${Math.round(summary.progressPercent)}%`}
+            detail={`${summary.paidCount}/${summary.totalCount} EMIs paid`}
+          >
+            <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+              <div className="h-full rounded-full bg-primary" style={{ width: `${summary.progressPercent}%` }} />
+            </div>
+          </StatCard>
         </div>
 
-        <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
-          <div
-            className="h-full rounded-full bg-primary"
-            style={{ width: `${summary.progressPercent}%` }}
-          />
-        </div>
-
-        {summary.payoffDate && (
-          <p className="text-xs text-muted-foreground">
-            Expected payoff: {formatFullDate(summary.payoffDate)}
-          </p>
-        )}
-
-        <ScheduleList installments={loan.installments} nextInstallmentId={summary.nextInstallment?.id} />
+        <ScheduleTable
+          installments={loan.installments}
+          nextInstallmentId={summary.nextInstallment?.id}
+          payoffDate={summary.payoffDate}
+        />
       </CardContent>
     </Card>
   )
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+function StatCard({
+  label,
+  value,
+  detail,
+  children,
+}: {
+  label: string
+  value: string
+  detail?: string
+  children?: ReactNode
+}) {
   return (
-    <div className="flex flex-col gap-1">
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="text-sm font-medium">{value}</p>
-    </div>
+    <Card className="gap-2 py-4">
+      <CardHeader className="px-4">
+        <CardTitle className="text-xs font-normal text-muted-foreground">{label}</CardTitle>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-2 px-4">
+        <p className="text-2xl font-medium tabular-nums">{value}</p>
+        {detail && <p className="text-xs text-muted-foreground">{detail}</p>}
+        {children}
+      </CardContent>
+    </Card>
   )
 }
 
-function ScheduleList({
+function ScheduleTable({
   installments,
   nextInstallmentId,
+  payoffDate,
 }: {
   installments: LoanInstallment[]
   nextInstallmentId?: number
+  payoffDate?: Date
 }) {
   const today = new Date()
 
   return (
-    <div className="flex max-h-80 flex-col divide-y overflow-y-auto rounded-lg border">
-      {installments.map((installment) => {
-        const dueDate = parseDateOnly(installment.due_date)
-        const isNext = installment.id === nextInstallmentId
-        const isPast = dueDate < today && !isNext
+    <div className="max-h-80 overflow-y-auto rounded-lg border">
+      <Table>
+        <TableHeader className="sticky top-0 bg-card">
+          <TableRow>
+            <TableHead>#</TableHead>
+            <TableHead>Due date</TableHead>
+            <TableHead className="text-right">Principal</TableHead>
+            <TableHead className="text-right">Interest</TableHead>
+            <TableHead className="text-right">Amount</TableHead>
+            <TableHead>Status</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {installments.map((installment) => {
+            const dueDate = parseDateOnly(installment.due_date)
+            const isNext = installment.id === nextInstallmentId
+            const isPast = dueDate < today && !isNext
 
-        return (
-          <div key={installment.id} className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
-            <div className="flex items-center gap-2">
-              <span className="w-6 shrink-0 text-xs tabular-nums text-muted-foreground">
-                {installment.installment_num}
-              </span>
-              <span className={isPast ? 'text-muted-foreground' : 'font-medium'}>
-                {formatFullDate(dueDate).replace(/^\w+, /, '')}
-              </span>
-              {isNext && (
-                <Badge variant="default" className="text-xs">
-                  Next
-                </Badge>
-              )}
-            </div>
-            <div className="flex items-center gap-3 font-mono text-xs tabular-nums text-muted-foreground">
-              <span>P {formatCurrency(installment.principal)}</span>
-              <span>I {formatCurrency(installment.interest)}</span>
-              <span className="w-20 text-right font-medium text-foreground">
-                {formatCurrency(installment.amount)}
-              </span>
-            </div>
-          </div>
-        )
-      })}
+            return (
+              <TableRow key={installment.id}>
+                <TableCell className="tabular-nums text-muted-foreground">
+                  {installment.installment_num}
+                </TableCell>
+                <TableCell className={cn(isPast && 'text-muted-foreground')}>
+                  {formatFullDate(dueDate).replace(/^\w+, /, '')}
+                </TableCell>
+                <TableCell className="text-right font-mono tabular-nums text-muted-foreground">
+                  {formatCurrency(installment.principal)}
+                </TableCell>
+                <TableCell className="text-right font-mono tabular-nums text-muted-foreground">
+                  {formatCurrency(installment.interest)}
+                </TableCell>
+                <TableCell className="text-right font-mono font-medium tabular-nums">
+                  {formatCurrency(installment.amount)}
+                </TableCell>
+                <TableCell>
+                  {isNext && (
+                    <Badge variant="default" className="text-xs">
+                      Next
+                    </Badge>
+                  )}
+                </TableCell>
+              </TableRow>
+            )
+          })}
+        </TableBody>
+        {payoffDate && <TableCaption className="px-3 pb-3">Expected payoff: {formatFullDate(payoffDate)}</TableCaption>}
+      </Table>
     </div>
   )
 }
