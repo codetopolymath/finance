@@ -126,7 +126,7 @@ function ScheduleTable({
 }: {
   installments: LoanInstallment[]
   nextInstallmentId?: number
-  payoffDate?: Date
+  payoffDate: Date | null
 }) {
   const today = new Date()
 
