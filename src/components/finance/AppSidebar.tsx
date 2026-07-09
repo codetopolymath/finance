@@ -53,7 +53,9 @@ export function AppSidebar() {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <SidebarGroup>
+        {/* On phones the bottom tab bar is the primary nav — the sheet only
+         * carries secondary actions, so hide the duplicate links there. */}
+        <SidebarGroup className="hidden md:block">
           <SidebarGroupContent>
             <SidebarMenu>
               {NAV_ITEMS.map((item) => {
