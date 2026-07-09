@@ -1,4 +1,4 @@
-import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from './supabase'
 import type { Transaction } from '@/types/transaction'
 
@@ -26,6 +26,30 @@ export function useTransactions() {
     queryKey: ['transactions'],
     queryFn: fetchTransactions,
     staleTime: 60_000,
+  })
+}
+
+export interface TransactionEdit {
+  id: number
+  category: string
+  note: string | null
+}
+
+/** The app's one write path: category + note only — the Supabase column grant
+ * matches (UPDATE is granted on exactly these columns), so widening this type
+ * requires a matching grant change in the database. */
+export function useUpdateTransaction() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, category, note }: TransactionEdit) => {
+      const { error } = await supabase.from('transactions').update({ category, note }).eq('id', id)
+      if (error) throw error
+    },
+    onSuccess: () => {
+      // One prefix invalidates all three transaction caches: the full fetch,
+      // the infinite pages, and the derived filter options.
+      queryClient.invalidateQueries({ queryKey: ['transactions'] })
+    },
   })
 }
 

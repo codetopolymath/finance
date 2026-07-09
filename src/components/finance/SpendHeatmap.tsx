@@ -1,6 +1,7 @@
-import { Fragment } from 'react'
+import { Fragment, useState } from 'react'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { formatCurrency } from '@/lib/format'
+import { cn } from '@/lib/utils'
 import type { HeatmapCell } from '@/lib/selectors'
 
 const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
@@ -21,8 +22,18 @@ function cellBackground(intensity: number): string {
   return `color-mix(in oklch, var(--chart-1) ${strength}%, var(--muted))`
 }
 
+function cellSummary(day: number, hour: number, cell: HeatmapCell): string {
+  const window = `${DAY_LABELS[day]} ${formatHour(hour)}–${formatHour((hour + 1) % 24)}`
+  return cell.count === 0
+    ? `${window} · No spend`
+    : `${window} · ${formatCurrency(cell.total)} · ${cell.count} txn${cell.count === 1 ? '' : 's'}`
+}
+
 export function SpendHeatmap({ data }: { data: HeatmapCell[] }) {
   const max = Math.max(0, ...data.map((c) => c.total))
+  // Hover tooltips don't exist on touch — tapping a cell pins its summary in
+  // the caption line below the grid instead.
+  const [selected, setSelected] = useState<{ day: number; hour: number } | null>(null)
 
   return (
     <div className="overflow-x-auto">
@@ -40,20 +51,22 @@ export function SpendHeatmap({ data }: { data: HeatmapCell[] }) {
             {Array.from({ length: 24 }, (_, hour) => {
               const cell = data[day * 24 + hour]
               const intensity = max === 0 ? 0 : cell.total / max
+              const isSelected = selected?.day === day && selected?.hour === hour
               return (
                 <Tooltip key={hour}>
                   <TooltipTrigger asChild>
-                    <div
-                      className="aspect-square rounded-sm"
+                    <button
+                      type="button"
+                      aria-label={cellSummary(day, hour, cell)}
+                      onClick={() => setSelected(isSelected ? null : { day, hour })}
+                      className={cn(
+                        'aspect-square rounded-sm',
+                        isSelected && 'ring-2 ring-ring ring-offset-1 ring-offset-background',
+                      )}
                       style={{ backgroundColor: cellBackground(intensity) }}
                     />
                   </TooltipTrigger>
-                  <TooltipContent>
-                    {label} {formatHour(hour)}–{formatHour((hour + 1) % 24)} ·{' '}
-                    {cell.count === 0
-                      ? 'No spend'
-                      : `${formatCurrency(cell.total)} · ${cell.count} txn${cell.count === 1 ? '' : 's'}`}
-                  </TooltipContent>
+                  <TooltipContent>{cellSummary(day, hour, cell)}</TooltipContent>
                 </Tooltip>
               )
             })}
@@ -61,12 +74,17 @@ export function SpendHeatmap({ data }: { data: HeatmapCell[] }) {
         ))}
       </div>
 
-      <div className="mt-3 flex items-center justify-end gap-1.5 text-[10px] text-muted-foreground">
-        <span>Less</span>
-        {[0, 0.25, 0.5, 0.75, 1].map((step) => (
-          <div key={step} className="size-3 rounded-sm" style={{ backgroundColor: cellBackground(step) }} />
-        ))}
-        <span>More</span>
+      <div className="mt-3 flex items-center justify-between gap-3 text-[10px] text-muted-foreground">
+        <p className="min-h-4 text-xs">
+          {selected ? cellSummary(selected.day, selected.hour, data[selected.day * 24 + selected.hour]) : ''}
+        </p>
+        <div className="flex items-center gap-1.5">
+          <span>Less</span>
+          {[0, 0.25, 0.5, 0.75, 1].map((step) => (
+            <div key={step} className="size-3 rounded-sm" style={{ backgroundColor: cellBackground(step) }} />
+          ))}
+          <span>More</span>
+        </div>
       </div>
     </div>
   )

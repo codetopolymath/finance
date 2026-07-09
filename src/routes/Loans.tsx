@@ -1,5 +1,6 @@
-import type { ReactNode } from 'react'
-import { AlertTriangle, Landmark } from 'lucide-react'
+import { useEffect, useRef, type ReactNode } from 'react'
+import { startOfDay } from 'date-fns'
+import { AlertTriangle, CheckCircle2, Landmark } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -7,7 +8,7 @@ import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, Tabl
 import { EmptyState } from '@/components/finance/EmptyState'
 import { useLoans } from '@/lib/loanQueries'
 import { summarizeLoan } from '@/lib/loanSelectors'
-import { formatCurrency, formatFullDate, parseDateOnly } from '@/lib/format'
+import { formatCurrency, formatFullDate, formatShortDate, parseDateOnly } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import type { LoanInstallment, LoanWithInstallments } from '@/types/loan'
 
@@ -128,17 +129,24 @@ function ScheduleTable({
   nextInstallmentId?: number
   payoffDate: Date | null
 }) {
-  const today = new Date()
+  // Same paid predicate as summarizeLoan, so badge counts always match the
+  // "x/y EMIs paid" stat above the table.
+  const todayStart = startOfDay(new Date())
+  const nextRowRef = useRef<HTMLTableRowElement | null>(null)
+
+  useEffect(() => {
+    nextRowRef.current?.scrollIntoView({ block: 'center' })
+  }, [])
 
   return (
     <div className="max-h-80 overflow-y-auto rounded-lg border">
       <Table>
         <TableHeader className="sticky top-0 bg-card">
           <TableRow>
-            <TableHead>#</TableHead>
+            <TableHead className="hidden sm:table-cell">#</TableHead>
             <TableHead>Due date</TableHead>
-            <TableHead className="text-right">Principal</TableHead>
-            <TableHead className="text-right">Interest</TableHead>
+            <TableHead className="hidden text-right sm:table-cell">Principal</TableHead>
+            <TableHead className="hidden text-right sm:table-cell">Interest</TableHead>
             <TableHead className="text-right">Amount</TableHead>
             <TableHead>Status</TableHead>
           </TableRow>
@@ -147,20 +155,20 @@ function ScheduleTable({
           {installments.map((installment) => {
             const dueDate = parseDateOnly(installment.due_date)
             const isNext = installment.id === nextInstallmentId
-            const isPast = dueDate < today && !isNext
+            const isPaid = dueDate < todayStart
 
             return (
-              <TableRow key={installment.id}>
-                <TableCell className="tabular-nums text-muted-foreground">
+              <TableRow key={installment.id} ref={isNext ? nextRowRef : undefined}>
+                <TableCell className="hidden tabular-nums text-muted-foreground sm:table-cell">
                   {installment.installment_num}
                 </TableCell>
-                <TableCell className={cn(isPast && 'text-muted-foreground')}>
-                  {formatFullDate(dueDate).replace(/^\w+, /, '')}
+                <TableCell className={cn(isPaid && 'text-muted-foreground')}>
+                  {formatShortDate(dueDate)}
                 </TableCell>
-                <TableCell className="text-right font-mono tabular-nums text-muted-foreground">
+                <TableCell className="hidden text-right font-mono tabular-nums text-muted-foreground sm:table-cell">
                   {formatCurrency(installment.principal)}
                 </TableCell>
-                <TableCell className="text-right font-mono tabular-nums text-muted-foreground">
+                <TableCell className="hidden text-right font-mono tabular-nums text-muted-foreground sm:table-cell">
                   {formatCurrency(installment.interest)}
                 </TableCell>
                 <TableCell className="text-right font-mono font-medium tabular-nums">
@@ -170,6 +178,12 @@ function ScheduleTable({
                   {isNext && (
                     <Badge variant="default" className="text-xs">
                       Next
+                    </Badge>
+                  )}
+                  {isPaid && (
+                    <Badge variant="secondary" className="text-xs text-success">
+                      <CheckCircle2 />
+                      Paid
                     </Badge>
                   )}
                 </TableCell>

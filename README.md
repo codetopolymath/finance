@@ -6,11 +6,14 @@ A private, single-user finance dashboard — scan monthly spend, browse transact
 
 ## Product
 
-Read-only by design: transactions are ingested elsewhere and land in Supabase; this app's only job is to make sense of them fast.
+Transactions are ingested elsewhere (the spendcheck job) and land in Supabase; this app makes sense of them fast, and can fix up a transaction's category or note in place — everything else stays read-only.
 
 - **Dashboard** — month income/spend/net, category breakdown, recent transactions
-- **Transactions** — search + filter by category/type/date range, grouped by day
-- **Insights** — daily/weekly spend trend, top vendors
+- **Transactions** — search + filter by category/type/date range, grouped by day; edit category/note from the detail drawer
+- **Insights** — daily/weekly spend trend, weekday×hour heatmap, top vendors
+- **Loans** — EMI schedules with paid/next status, outstanding principal, payoff progress
+
+Built mobile-first: bottom tab bar navigation on phones, bottom-sheet transaction details, safe-area-aware layout, and an installable PWA manifest (Add to Home Screen on iOS).
 
 ## Stack
 
@@ -29,6 +32,7 @@ The Supabase anon key is public by necessity (it ships in the client bundle) —
 
 - **Auth**: GitHub OAuth via Supabase Auth (`src/lib/auth-context.tsx`) gates the whole app
 - **Authorization**: Row Level Security on `transactions` restricts reads to one allow-listed email, enforced in Postgres regardless of who holds the anon key
+- **Writes**: a single UPDATE policy (same allow-listed email) plus a column-level grant limited to `category` and `note` — the only fields the app can change; all other columns and tables stay read-only
 
 ## Local development
 

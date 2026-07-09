@@ -28,6 +28,10 @@ export function formatMonthLabel(date: Date): string {
   return format(date, 'MMMM yyyy')
 }
 
+export function formatShortDate(date: Date): string {
+  return format(date, 'd MMM yyyy')
+}
+
 export function formatFullDate(date: Date): string {
   return format(date, 'EEEE, d MMMM yyyy')
 }

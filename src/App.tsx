@@ -1,9 +1,13 @@
 import { lazy, Suspense } from 'react'
 import { Route, Routes, useLocation } from 'react-router-dom'
+import { useIsFetching, useQueryClient } from '@tanstack/react-query'
+import { RefreshCw } from 'lucide-react'
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
+import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
 import { AppSidebar } from '@/components/finance/AppSidebar'
+import { BottomNav } from '@/components/finance/BottomNav'
 import Login from '@/routes/Login'
 import { useAuth } from '@/lib/auth-context'
 import { formatFullDate } from '@/lib/format'
@@ -24,6 +28,8 @@ function App() {
   const location = useLocation()
   const title = PAGE_TITLES[location.pathname] ?? 'Spendcheck'
   const { session, loading } = useAuth()
+  const queryClient = useQueryClient()
+  const isFetching = useIsFetching() > 0
 
   if (loading) return null
 
@@ -38,8 +44,18 @@ function App() {
           <Separator orientation="vertical" className="mr-2 h-4" />
           <h1 className="text-sm font-medium">{title}</h1>
           <span className="ml-auto text-xs text-muted-foreground">{formatFullDate(new Date())}</span>
+          {/* Installed to the home screen there's no browser reload UI — this
+           * is the only way to force fresh data in standalone mode. */}
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Refresh data"
+            onClick={() => queryClient.invalidateQueries()}
+          >
+            <RefreshCw className={isFetching ? 'animate-spin' : undefined} />
+          </Button>
         </header>
-        <div className="flex flex-1 flex-col gap-6 p-4 md:p-6">
+        <div className="flex flex-1 flex-col gap-6 p-4 pb-[calc(4.5rem+env(safe-area-inset-bottom))] md:p-6">
           <Suspense fallback={<Skeleton className="h-72 w-full" />}>
             <Routes>
               <Route path="/" element={<Dashboard />} />
@@ -49,6 +65,7 @@ function App() {
             </Routes>
           </Suspense>
         </div>
+        <BottomNav />
       </SidebarInset>
     </SidebarProvider>
   )

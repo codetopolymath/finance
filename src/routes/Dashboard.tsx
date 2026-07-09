@@ -86,7 +86,11 @@ export default function Dashboard() {
         </Card>
       </div>
 
-      <TransactionDetailDrawer transaction={selected} onOpenChange={(open) => !open && setSelected(null)} />
+      <TransactionDetailDrawer
+        transaction={selected}
+        onOpenChange={(open) => !open && setSelected(null)}
+        onUpdated={setSelected}
+      />
     </div>
   )
 }
