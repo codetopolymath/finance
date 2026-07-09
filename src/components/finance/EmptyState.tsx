@@ -20,8 +20,11 @@ export function EmptyState({ icon: Icon, title, description, action }: EmptyStat
   return (
     <Empty>
       <EmptyHeader>
-        <EmptyMedia variant="icon">
-          <Icon />
+        <EmptyMedia
+          variant="icon"
+          className="size-16 rounded-full bg-primary/10 text-primary [&_svg:not([class*='size-'])]:size-7"
+        >
+          <Icon strokeWidth={1.5} />
         </EmptyMedia>
         <EmptyTitle>{title}</EmptyTitle>
         <EmptyDescription>{description}</EmptyDescription>

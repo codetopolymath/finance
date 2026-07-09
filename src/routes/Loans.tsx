@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { EmptyState } from '@/components/finance/EmptyState'
+import { LoanAmortizationChart } from '@/components/finance/LoanAmortizationChart'
 import { useLoans } from '@/lib/loanQueries'
 import { summarizeLoan } from '@/lib/loanSelectors'
 import { formatCurrency, formatFullDate, formatShortDate, parseDateOnly } from '@/lib/format'
@@ -84,6 +85,8 @@ function LoanCard({ loan }: { loan: LoanWithInstallments }) {
             </div>
           </StatCard>
         </div>
+
+        <LoanAmortizationChart installments={loan.installments} />
 
         <ScheduleTable
           installments={loan.installments}

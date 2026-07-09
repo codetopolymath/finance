@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { useCountUp } from '@/hooks/use-count-up'
 import { formatCurrency } from '@/lib/format'
 import { cn } from '@/lib/utils'
 
@@ -15,6 +16,8 @@ const TONE_CLASSES: Record<NonNullable<MetricCardProps['tone']>, string> = {
 }
 
 export function MetricCard({ label, value, tone = 'default' }: MetricCardProps) {
+  const animated = useCountUp(value)
+
   return (
     <Card className="gap-2 py-4">
       <CardHeader className="px-4">
@@ -22,7 +25,7 @@ export function MetricCard({ label, value, tone = 'default' }: MetricCardProps) 
       </CardHeader>
       <CardContent className="px-4">
         <p className={cn('text-2xl font-medium tabular-nums', TONE_CLASSES[tone])}>
-          {formatCurrency(value)}
+          {formatCurrency(animated)}
         </p>
       </CardContent>
     </Card>

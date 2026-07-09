@@ -46,6 +46,11 @@
   --category-7: #06b6d4;
   --category-8: #ec4899;
   --category-other: #78716c;
+  /* Loan amortization pair (principal/interest) — validated as a set with
+   * scripts/validate_palette.js from the dataviz skill for light surface
+   * #fcfcfc; the dark block below re-picks the green for the dark band. */
+  --amort-principal: #10b981;
+  --amort-interest: #3b82f6;
   --sidebar: #fcfcfc;
   --sidebar-foreground: #707070;
   --sidebar-primary: #72e3ad;
@@ -95,6 +100,10 @@
     --category-7: #0891b2;
     --category-8: #ec4899;
     --category-other: #a8a29e;
+    /* Dark-surface re-pick (validated against #171717): the light-mode green
+     * sits above the dark lightness band, so it steps down one notch. */
+    --amort-principal: #0ea371;
+    --amort-interest: #3b82f6;
     --sidebar: #121212;
     --sidebar-foreground: #898989;
     --sidebar-primary: #4ade80;

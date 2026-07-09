@@ -12,7 +12,7 @@ export function TransactionRow({ transaction, onClick }: TransactionRowProps) {
     <button
       type="button"
       onClick={onClick}
-      className="flex w-full items-center justify-between gap-3 rounded-md px-2 py-3 text-left hover:bg-muted/50 active:bg-muted"
+      className="flex w-full items-center justify-between gap-3 rounded-md px-2 py-3 text-left transition-[background-color,transform] duration-100 hover:bg-muted/50 active:scale-[0.98] active:bg-muted motion-reduce:active:scale-100"
     >
       <div className="min-w-0">
         <p className="truncate text-sm font-medium">{transaction.vendor ?? transaction.category}</p>

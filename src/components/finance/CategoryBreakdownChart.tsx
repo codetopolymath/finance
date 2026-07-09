@@ -61,7 +61,7 @@ export function CategoryBreakdownChart({ data, month }: { data: CategoryTotal[];
           <Link
             key={item.category}
             to={`/transactions?category=${encodeURIComponent(item.category)}&month=${monthParam}`}
-            className="-mx-2 rounded-md px-2 py-1 transition-colors hover:bg-accent"
+            className="-mx-2 rounded-md px-2 py-1 transition-[background-color,transform] duration-100 hover:bg-accent active:scale-[0.98] active:bg-accent motion-reduce:active:scale-100"
           >
             {row}
           </Link>
