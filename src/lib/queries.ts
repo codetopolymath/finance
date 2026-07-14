@@ -144,25 +144,31 @@ export function useInfiniteTransactions(filters: TransactionFilters) {
 interface FilterOptions {
   categories: string[]
   flowTypes: string[]
+  accounts: string[]
 }
 
-/** Postgrest has no SELECT DISTINCT — this fetches only the two filter
- * columns (not the full row) across the table and dedupes client-side, which
- * is far lighter than the full-row fetch it replaces. */
+/** Postgrest has no SELECT DISTINCT — this fetches only the filter columns
+ * (not the full row) across the table and dedupes client-side, which is far
+ * lighter than the full-row fetch it replaces. `accounts` exists for the
+ * receipt-capture confirm form's account picker — same reasoning as
+ * category/flow_type: pick from existing values, don't allow free text. */
 async function fetchFilterOptions(): Promise<FilterOptions> {
-  const { data, error } = await supabase.from('transactions').select('category, flow_type')
+  const { data, error } = await supabase.from('transactions').select('category, flow_type, account')
   if (error) throw error
 
   const categories = new Set<string>()
   const flowTypes = new Set<string>()
+  const accounts = new Set<string>()
   for (const row of data ?? []) {
     categories.add(row.category)
     flowTypes.add(row.flow_type)
+    accounts.add(row.account)
   }
 
   return {
     categories: [...categories].sort(),
     flowTypes: [...flowTypes],
+    accounts: [...accounts].sort(),
   }
 }
 
@@ -171,5 +177,44 @@ export function useTransactionFilterOptions() {
     queryKey: ['transactions', 'filter-options'],
     queryFn: fetchFilterOptions,
     staleTime: 5 * 60_000,
+  })
+}
+
+/** Local calendar-day bounds (not UTC) — a date-only "yyyy-MM-dd" picked in
+ * the UI means that day in the user's own timezone, same reasoning as
+ * `rangeBounds`'s custom-month handling above. */
+function dayBounds(date: string): { start: Date; end: Date } {
+  const [year, month, day] = date.split('-').map(Number)
+  const start = new Date(year, month - 1, day)
+  const end = new Date(year, month - 1, day + 1)
+  return { start, end }
+}
+
+async function fetchTransactionsForDay(date: string): Promise<Transaction[]> {
+  const { start, end } = dayBounds(date)
+  const { data, error } = await supabase
+    .from('transactions')
+    .select(COLUMNS)
+    .gte('txn_at', start.toISOString())
+    .lt('txn_at', end.toISOString())
+    .order('txn_at', { ascending: false })
+
+  if (error) throw error
+
+  return (data ?? []).map((row) => ({
+    ...row,
+    amount: Number(row.amount),
+  }))
+}
+
+/** A single day's transactions (typically <20 rows) — deliberately separate
+ * from useInfiniteTransactions, which is shaped for month-range infinite
+ * scroll. Used by DateScopedTransactionPicker to browse/manually match a
+ * specific transaction on a given date. */
+export function useTransactionsForDay(date: string) {
+  return useQuery({
+    queryKey: ['transactions', 'day', date],
+    queryFn: () => fetchTransactionsForDay(date),
+    staleTime: 60_000,
   })
 }

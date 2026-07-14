@@ -8,6 +8,7 @@ import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
 import { AppSidebar } from '@/components/finance/AppSidebar'
 import { BottomNav } from '@/components/finance/BottomNav'
+import { Toaster } from '@/components/ui/sonner'
 import Login from '@/routes/Login'
 import { useAuth } from '@/lib/auth-context'
 import { formatFullDate } from '@/lib/format'
@@ -16,12 +17,16 @@ const Dashboard = lazy(() => import('@/routes/Dashboard'))
 const Transactions = lazy(() => import('@/routes/Transactions'))
 const Insights = lazy(() => import('@/routes/Insights'))
 const Loans = lazy(() => import('@/routes/Loans'))
+const Automations = lazy(() => import('@/routes/Automations'))
+const ReceiptCapture = lazy(() => import('@/routes/ReceiptCapture'))
 
 const PAGE_TITLES: Record<string, string> = {
   '/': 'Dashboard',
   '/transactions': 'Transactions',
   '/insights': 'Insights',
   '/loans': 'Loans',
+  '/automations': 'Automations',
+  '/automations/receipt': 'Add from Receipt',
 }
 
 function App() {
@@ -40,8 +45,8 @@ function App() {
       <AppSidebar />
       <SidebarInset>
         <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4">
-          <SidebarTrigger className="-ml-1" />
-          <Separator orientation="vertical" className="mr-2 h-4" />
+          <SidebarTrigger className="-ml-1 hidden md:flex" />
+          <Separator orientation="vertical" className="mr-2 hidden h-4 md:flex" />
           <h1 className="text-sm font-medium">{title}</h1>
           <span className="ml-auto text-xs text-muted-foreground">{formatFullDate(new Date())}</span>
           {/* Installed to the home screen there's no browser reload UI — this
@@ -62,11 +67,14 @@ function App() {
               <Route path="/transactions" element={<Transactions />} />
               <Route path="/insights" element={<Insights />} />
               <Route path="/loans" element={<Loans />} />
+              <Route path="/automations" element={<Automations />} />
+              <Route path="/automations/receipt" element={<ReceiptCapture />} />
             </Routes>
           </Suspense>
         </div>
         <BottomNav />
       </SidebarInset>
+      <Toaster position="top-center" />
     </SidebarProvider>
   )
 }
