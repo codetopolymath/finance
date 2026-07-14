@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { formatDistanceToNow } from 'date-fns'
 import { Loader2, LogOut, PlayCircle, Receipt, Sparkles } from 'lucide-react'
@@ -34,11 +34,18 @@ function SpendcheckCard() {
 
 function DayCleanupCard() {
   const [date, setDate] = useState(yesterdayInIst)
+  const dateInputRef = useRef<HTMLInputElement | null>(null)
   const cleanup = useTriggerDayCleanup()
 
   const handleRun = () => {
-    cleanup.mutate(date, {
-      onSuccess: () => toast.success('Started — check Claude for results'),
+    // Read the input's live DOM value rather than trusting React state here —
+    // iOS Safari's native date-wheel picker doesn't reliably fire `onChange`
+    // before a fast subsequent tap on Run registers, which let a stale
+    // `date` slip through and silently run against yesterday instead of the
+    // picked date. Reading the DOM directly at click-time can't go stale.
+    const selectedDate = dateInputRef.current?.value || date
+    cleanup.mutate(selectedDate, {
+      onSuccess: () => toast.success(`Started for ${selectedDate} — check Claude for results`),
       onError: (error) => toast.error(error instanceof Error ? error.message : 'Failed to start'),
     })
   }
@@ -51,6 +58,7 @@ function DayCleanupCard() {
     >
       <div className="flex flex-wrap items-center gap-2">
         <Input
+          ref={dateInputRef}
           type="date"
           value={date}
           onChange={(event) => setDate(event.target.value)}
