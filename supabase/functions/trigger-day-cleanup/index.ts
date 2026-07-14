@@ -84,5 +84,8 @@ Deno.serve(async (req) => {
   )
 
   const routineBody = await routineResponse.json()
+  if (!routineResponse.ok) {
+    console.error('Routine fire failed', routineResponse.status, JSON.stringify(routineBody))
+  }
   return json(routineBody, routineResponse.status)
 })
