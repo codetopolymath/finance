@@ -45,7 +45,16 @@ export function TransactionDetailDrawer({
       onOpenChange={onOpenChange}
       direction={isMobile ? 'bottom' : 'right'}
     >
-      <DrawerContent className="data-[vaul-drawer-direction=bottom]:max-h-[85dvh]">
+      {/* vaul's own keyboard-avoidance logic (see node_modules/vaul) checks
+       * `drawerHeight > totalHeight * 0.8` to decide how aggressively to
+       * shrink the drawer when the iOS keyboard opens — a drawer at/above
+       * that 80% threshold makes it subtract the drawer's current *distance
+       * from the top of the screen* (much larger) instead of a small fixed
+       * 26px offset, over-shrinking the drawer's visible height while the
+       * keyboard is up (reported: note text effectively invisible/squeezed
+       * to a sliver when editing). Staying safely under 80% keeps vaul on
+       * the gentler shrink path. */}
+      <DrawerContent className="data-[vaul-drawer-direction=bottom]:max-h-[75dvh]">
         {transaction && (
           <DrawerBody
             key={transaction.id}
@@ -188,6 +197,13 @@ function TransactionEditForm({
             rows={3}
             value={note}
             onChange={(e) => setNote(e.target.value)}
+            onFocus={(e) => {
+              const target = e.currentTarget
+              // Safety net alongside vaul's own keyboard-avoidance: give the
+              // keyboard-open animation a moment, then make sure the field
+              // that's actually focused is the one scrolled into view.
+              setTimeout(() => target.scrollIntoView({ block: 'center', behavior: 'smooth' }), 300)
+            }}
             placeholder="Add a note"
           />
         </div>
