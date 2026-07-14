@@ -85,7 +85,7 @@ function DrawerBody({
         />
       ) : (
         <>
-          <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 text-sm">
+          <div className="flex min-h-0 flex-1 transform-gpu flex-col gap-4 overflow-y-auto px-4 text-sm">
             <div className="flex flex-wrap items-center gap-2">
               <FlowTypeBadge flowType={transaction.flow_type} />
               <Badge variant="secondary">{transaction.category}</Badge>
@@ -161,7 +161,7 @@ function TransactionEditForm({
 
   return (
     <>
-      <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 text-sm">
+      <div className="flex min-h-0 flex-1 transform-gpu flex-col gap-4 overflow-y-auto px-4 text-sm">
         <div className="flex flex-col gap-1.5">
           <label htmlFor="edit-category" className="text-muted-foreground">
             Category

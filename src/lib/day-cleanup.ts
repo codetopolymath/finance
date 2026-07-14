@@ -1,3 +1,4 @@
+import { FunctionsHttpError } from '@supabase/supabase-js'
 import { useMutation } from '@tanstack/react-query'
 import { supabase } from './supabase'
 
@@ -6,11 +7,28 @@ interface DayCleanupResult {
   error?: string
 }
 
+/** Supabase-js's default FunctionsHttpError message is just "Edge Function
+ * returned a non-2xx status code" — it doesn't surface the actual response
+ * body. `error.context` is the raw Response, so read the real reason out of
+ * it (the edge function passes through whatever the routine's /fire
+ * endpoint returned) instead of showing that generic message in the toast. */
+async function describeError(error: unknown): Promise<Error> {
+  if (error instanceof FunctionsHttpError) {
+    const body = await error.context.json().catch(() => null)
+    const message =
+      typeof body?.error === 'string'
+        ? body.error
+        : (body?.error?.message ?? body?.message ?? JSON.stringify(body) ?? error.message)
+    return new Error(message)
+  }
+  return error instanceof Error ? error : new Error('Failed to start')
+}
+
 async function triggerDayCleanup(date: string): Promise<DayCleanupResult> {
   const { data, error } = await supabase.functions.invoke<DayCleanupResult>('trigger-day-cleanup', {
     body: { date },
   })
-  if (error) throw error
+  if (error) throw await describeError(error)
   if (data?.error) throw new Error(data.error)
   return data ?? {}
 }
