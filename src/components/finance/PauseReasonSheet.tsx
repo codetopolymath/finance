@@ -51,7 +51,7 @@ export function PauseReasonSheet({ open, onOpenChange, onConfirm, isSubmitting }
           <DrawerTitle>Pause this session</DrawerTitle>
           <DrawerDescription>Quick reason — no explanation needed.</DrawerDescription>
         </DrawerHeader>
-        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 text-sm">
+        <div className="flex min-h-0 flex-1 transform-gpu flex-col gap-4 overflow-y-auto px-4 text-sm">
           <div className="flex flex-col gap-2">
             {REASONS.map((r) => (
               <button
@@ -59,7 +59,7 @@ export function PauseReasonSheet({ open, onOpenChange, onConfirm, isSubmitting }
                 type="button"
                 onClick={() => setReason(r.value)}
                 className={cn(
-                  'rounded-md border px-3 py-2.5 text-left transition-colors',
+                  'rounded-md border px-3 py-2.5 text-left transition-[color,background-color,transform] active:scale-[0.98] motion-reduce:active:scale-100',
                   reason === r.value ? 'border-primary bg-primary/10' : 'border-border',
                 )}
               >
@@ -71,6 +71,10 @@ export function PauseReasonSheet({ open, onOpenChange, onConfirm, isSubmitting }
             rows={2}
             value={note}
             onChange={(e) => setNote(e.target.value)}
+            onFocus={(e) => {
+              const target = e.currentTarget
+              setTimeout(() => target.scrollIntoView({ block: 'center', behavior: 'smooth' }), 300)
+            }}
             placeholder="Optional note"
           />
         </div>

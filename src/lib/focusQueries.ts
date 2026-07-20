@@ -1,7 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from './supabase'
-import type { FocusSession, PauseEvent, PauseReason, Task, TaskStatus } from '@/types/focus'
+import type { FocusSession, PauseEvent, PauseReason, SessionKind, Task, TaskStatus } from '@/types/focus'
 import { BREAK_MINUTES, WORK_MINUTES } from '@/types/focus'
+import { activeWorkMs } from './focusSelectors'
 
 const TASK_COLUMNS =
   'id, title, notes, status, is_frog, due_date, snooze_count, budget_minutes, sort_order, created_at, completed_at'
@@ -79,17 +80,6 @@ export function useUpdateTask() {
   })
 }
 
-export function useDeleteTask() {
-  const invalidate = useInvalidateTasks()
-  return useMutation({
-    mutationFn: async (id: number) => {
-      const { error } = await supabase.from('tasks').delete().eq('id', id)
-      if (error) throw error
-    },
-    onSuccess: invalidate,
-  })
-}
-
 /** Snoozing always succeeds instantly and never asks for a reason — the
  * primary, low-friction way a task leaves Today without being done. */
 export function useSnoozeTask() {
@@ -122,9 +112,11 @@ export function useUnsnoozeTask() {
 }
 
 /** Marking a task done ends its active session immediately, regardless of
- * time left, per spec §5.2. */
+ * time left, per spec §5.2. Invalidates both `tasks` and `focus-sessions` —
+ * missing the latter left the active-session bar showing a "completed"
+ * session's stale running clock until the next full reload. */
 export function useCompleteTask() {
-  const invalidate = useInvalidateTasks()
+  const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async (task: Task) => {
       const now = new Date().toISOString()
@@ -139,6 +131,22 @@ export function useCompleteTask() {
         .from('tasks')
         .update({ status: 'done', completed_at: now })
         .eq('id', task.id)
+      if (error) throw error
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tasks'] })
+      queryClient.invalidateQueries({ queryKey: ['focus-sessions'] })
+    },
+  })
+}
+
+/** Reopens a done task back to open — the inverse of `useCompleteTask`,
+ * for when "done" was tapped by mistake. Session history is left alone. */
+export function useReopenTask() {
+  const invalidate = useInvalidateTasks()
+  return useMutation({
+    mutationFn: async (id: number) => {
+      const { error } = await supabase.from('tasks').update({ status: 'open', completed_at: null }).eq('id', id)
       if (error) throw error
     },
     onSuccess: invalidate,
@@ -174,10 +182,73 @@ export function useFocusSessions(taskId: number | null) {
   })
 }
 
+async function fetchAllFocusHistory(): Promise<{ sessions: FocusSession[]; pauses: PauseEvent[] }> {
+  const { data: sessions, error: sessionsError } = await supabase.from('focus_sessions').select(SESSION_COLUMNS)
+  if (sessionsError) throw sessionsError
+
+  const { data: pauses, error: pausesError } = await supabase.from('pause_events').select(PAUSE_COLUMNS)
+  if (pausesError) throw pausesError
+
+  return { sessions: sessions ?? [], pauses: pauses ?? [] }
+}
+
+/** One bulk fetch across every task's sessions/pauses — same reasoning as
+ * `useTasks`, and lets list rows show a cumulative time/cycle summary
+ * without an N+1 query per row. */
+export function useAllFocusHistory() {
+  return useQuery({
+    queryKey: ['focus-sessions', 'all'],
+    queryFn: fetchAllFocusHistory,
+    staleTime: 15_000,
+  })
+}
+
 export interface ActiveSession {
   session: FocusSession
   task: Task
   pauses: PauseEvent[]
+}
+
+/** Unattended runtime is the whole point of the Pomodoro cycle: left alone,
+ * a task cycles work → break → work → break … automatically at the planned
+ * 25/5 boundary, with no tap required. Manual Pause/End/Done remain the
+ * only way to interrupt it — this only ever fires when nothing interrupted
+ * it. Work-session elapsed time is measured net of any pauses (via
+ * `activeWorkMs`) so a paused session never silently "expires"; breaks
+ * aren't pausable, so a plain wall-clock check is enough for them. */
+async function advanceIfElapsed(session: FocusSession, pauses: PauseEvent[]): Promise<FocusSession> {
+  if (session.status !== 'running') return session
+
+  const now = new Date()
+  const plannedMs = session.planned_minutes * 60_000
+  const elapsedMs =
+    session.kind === 'work'
+      ? activeWorkMs([session], pauses, now)
+      : now.getTime() - new Date(session.started_at).getTime()
+
+  if (elapsedMs < plannedMs) return session
+
+  const nowIso = now.toISOString()
+  const { error: endError } = await supabase
+    .from('focus_sessions')
+    .update({ status: 'completed', ended_at: nowIso })
+    .eq('id', session.id)
+  if (endError) throw endError
+
+  const nextKind: SessionKind = session.kind === 'work' ? 'break' : 'work'
+  const { data: nextSession, error: insertError } = await supabase
+    .from('focus_sessions')
+    .insert({
+      task_id: session.task_id,
+      kind: nextKind,
+      planned_minutes: nextKind === 'work' ? WORK_MINUTES : BREAK_MINUTES,
+      status: 'running',
+    })
+    .select(SESSION_COLUMNS)
+    .single()
+  if (insertError) throw insertError
+
+  return nextSession!
 }
 
 async function fetchActiveSession(): Promise<ActiveSession | null> {
@@ -187,22 +258,16 @@ async function fetchActiveSession(): Promise<ActiveSession | null> {
     .in('status', ['running', 'paused'])
     .limit(1)
   if (error) throw error
-  const session = sessions?.[0]
+  let session = sessions?.[0]
   if (!session) return null
 
-  // Breaks are the one session kind allowed to auto-end — work sessions
-  // never auto-end even if they overrun, per spec §5.2/§7.
-  if (session.kind === 'break' && session.status === 'running') {
-    const plannedEnd = new Date(session.started_at).getTime() + session.planned_minutes * 60_000
-    if (Date.now() >= plannedEnd) {
-      const { error: endError } = await supabase
-        .from('focus_sessions')
-        .update({ status: 'completed', ended_at: new Date(plannedEnd).toISOString() })
-        .eq('id', session.id)
-      if (endError) throw endError
-      return null
-    }
-  }
+  const { data: ownPauses, error: ownPausesError } = await supabase
+    .from('pause_events')
+    .select(PAUSE_COLUMNS)
+    .eq('session_id', session.id)
+  if (ownPausesError) throw ownPausesError
+
+  session = await advanceIfElapsed(session, ownPauses ?? [])
 
   const [{ data: task, error: taskError }, { data: pauses, error: pausesError }] = await Promise.all([
     supabase.from('tasks').select(TASK_COLUMNS).eq('id', session.task_id).single(),
@@ -214,16 +279,16 @@ async function fetchActiveSession(): Promise<ActiveSession | null> {
   return { session, task: task!, pauses: pauses ?? [] }
 }
 
-/** Polled at a modest interval so the active-session bar (and the
- * single-tasking guard) stays correct even if another tab/device changed
- * things — the underlying truth is always the stored timestamps, this
- * query just keeps the UI in sync with them. */
+/** Polled fairly tightly so the auto-continuing cycle (and the
+ * single-tasking guard) stays responsive even with nobody tapping anything
+ * — the underlying truth is always the stored timestamps, this query just
+ * keeps the UI (and the next auto-transition) in sync with them. */
 export function useActiveFocusSession() {
   return useQuery({
     queryKey: ['focus-sessions', 'active'],
     queryFn: fetchActiveSession,
-    staleTime: 10_000,
-    refetchInterval: 30_000,
+    staleTime: 5_000,
+    refetchInterval: 10_000,
   })
 }
 

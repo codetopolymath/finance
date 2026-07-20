@@ -1,22 +1,41 @@
-import { Circle, CheckCircle2, Star, Moon, Play } from 'lucide-react'
+import { Circle, CheckCircle2, Moon, Play } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import { useCompleteTask, useSnoozeTask, useStartWorkSession } from '@/lib/focusQueries'
+import { useCompleteTask, useReopenTask, useSnoozeTask, useStartWorkSession, useUpdateTask } from '@/lib/focusQueries'
+import { activeWorkMs, cycleCounts, SNOOZE_NUDGE_THRESHOLD } from '@/lib/focusSelectors'
 import { formatShortDate, parseDateOnly } from '@/lib/format'
-import type { Task } from '@/types/focus'
+import type { FocusSession, PauseEvent, Task } from '@/types/focus'
 
 interface TaskRowProps {
   task: Task
   hasActiveSession: boolean
   isActiveTask: boolean
   onOpenDetail: (task: Task) => void
+  /** This task's own sessions/pauses, pre-filtered by the caller from one
+   * bulk fetch — avoids an N+1 query per row. */
+  sessions?: FocusSession[]
+  pauses?: PauseEvent[]
 }
 
-export function TaskRow({ task, hasActiveSession, isActiveTask, onOpenDetail }: TaskRowProps) {
+function formatMinutes(ms: number): string {
+  const minutes = Math.round(ms / 60_000)
+  return minutes < 1 ? '<1m' : `${minutes}m`
+}
+
+export function TaskRow({
+  task,
+  hasActiveSession,
+  isActiveTask,
+  onOpenDetail,
+  sessions = [],
+  pauses = [],
+}: TaskRowProps) {
   const completeTask = useCompleteTask()
+  const reopenTask = useReopenTask()
   const snoozeTask = useSnoozeTask()
   const startSession = useStartWorkSession()
+  const updateTask = useUpdateTask()
 
   const handleStart = () => {
     startSession.mutate(task.id, {
@@ -24,42 +43,74 @@ export function TaskRow({ task, hasActiveSession, isActiveTask, onOpenDetail }: 
     })
   }
 
+  const handleToggleComplete = () => {
+    if (task.status === 'done') reopenTask.mutate(task.id)
+    else completeTask.mutate(task)
+  }
+
+  const { workSessions } = cycleCounts(sessions)
+  const spentMs = workSessions > 0 ? activeWorkMs(sessions, pauses, new Date()) : 0
+  const snoozedALot = task.snooze_count >= SNOOZE_NUDGE_THRESHOLD
+
   return (
     <div
       className={cn(
-        'flex items-center gap-3 rounded-lg border px-3 py-2.5',
+        'flex items-center gap-3 rounded-lg border px-3 py-2.5 transition-colors',
         task.is_frog && 'border-primary/40 bg-primary/5',
       )}
     >
       <button
         type="button"
         aria-label={task.status === 'done' ? 'Mark not done' : 'Mark done'}
-        onClick={() => completeTask.mutate(task)}
-        disabled={completeTask.isPending}
-        className="shrink-0 text-muted-foreground transition-colors hover:text-foreground"
+        onClick={handleToggleComplete}
+        disabled={completeTask.isPending || reopenTask.isPending}
+        className="shrink-0 text-muted-foreground transition-transform active:scale-90 hover:text-foreground motion-reduce:active:scale-100"
       >
         {task.status === 'done' ? <CheckCircle2 className="size-5 text-primary" /> : <Circle className="size-5" />}
       </button>
 
+      {task.status !== 'done' && (
+        <button
+          type="button"
+          aria-label={task.is_frog ? "Unflag as today's priority" : "Flag as today's priority"}
+          title={task.is_frog ? "Unflag as today's priority" : "Flag as today's priority"}
+          onClick={() => updateTask.mutate({ id: task.id, patch: { is_frog: !task.is_frog } })}
+          disabled={updateTask.isPending}
+          className={cn(
+            'shrink-0 text-base leading-none transition-transform active:scale-90 motion-reduce:active:scale-100',
+            task.is_frog ? 'opacity-100 grayscale-0' : 'opacity-30 grayscale hover:opacity-60',
+          )}
+        >
+          🐸
+        </button>
+      )}
+      {task.status === 'done' && task.is_frog && <span className="shrink-0 text-base leading-none">🐸</span>}
+
       <button type="button" className="min-w-0 flex-1 text-left" onClick={() => onOpenDetail(task)}>
         <p className="truncate text-sm">{task.title}</p>
-        {task.due_date && (
-          <p className="text-xs text-muted-foreground">{formatShortDate(parseDateOnly(task.due_date))}</p>
-        )}
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          {task.due_date && <span>{formatShortDate(parseDateOnly(task.due_date))}</span>}
+          {workSessions > 0 && (
+            <span className="tabular-nums">
+              {formatMinutes(spentMs)} · {workSessions} session{workSessions === 1 ? '' : 's'}
+            </span>
+          )}
+          {snoozedALot && <span title="Snoozed a few times">🌙×{task.snooze_count}</span>}
+        </div>
       </button>
-
-      {task.is_frog && <Star className="size-4 shrink-0 fill-primary text-primary" />}
 
       {isActiveTask ? (
         <span className="shrink-0 text-xs text-muted-foreground">Focusing…</span>
-      ) : (
+      ) : task.status === 'done' ? null : (
         <div className="flex shrink-0 items-center gap-1">
           <Button
             variant="ghost"
             size="icon-sm"
-            aria-label="Snooze"
+            aria-label="Snooze to Someday"
+            title="Snooze to Someday"
             onClick={() => snoozeTask.mutate(task)}
             disabled={snoozeTask.isPending}
+            className="active:scale-90 motion-reduce:active:scale-100"
           >
             <Moon />
           </Button>
@@ -69,6 +120,7 @@ export function TaskRow({ task, hasActiveSession, isActiveTask, onOpenDetail }: 
             aria-label="Start focus session"
             onClick={handleStart}
             disabled={hasActiveSession || startSession.isPending}
+            className="active:scale-90 motion-reduce:active:scale-100"
           >
             <Play />
           </Button>

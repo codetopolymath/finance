@@ -2,6 +2,7 @@ import type { FocusSession, PauseEvent, Task } from '@/types/focus'
 
 const TODAY_SOFT_CAP = 5
 export const PAUSE_NUDGE_THRESHOLD = 3
+export const SNOOZE_NUDGE_THRESHOLD = 3
 
 function isVisible(task: Task): boolean {
   return task.status === 'open'
@@ -11,20 +12,39 @@ function bySortOrder(a: Task, b: Task): number {
   return a.sort_order - b.sort_order
 }
 
+/** "yyyy-MM-dd" in local time, to compare against `due_date` (a date-only
+ * column) without the UTC-midnight rollback `new Date(string)` would cause
+ * in timezones ahead of UTC — same reasoning as `parseDateOnly` in
+ * `format.ts`. */
+export function localDateOnly(date: Date): string {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+function isoToLocalDateKey(iso: string): string {
+  return localDateOnly(new Date(iso))
+}
+
 export interface TodayGroup {
   frog: Task | null
   rest: Task[]
   overflowCount: number
 }
 
-/** Frog task pinned first, then the rest by manual sort order, soft-capped
- * so Today never grows into an overwhelming list — see spec §3/§5.1. The
- * overflow count is returned (not silently dropped) so the UI can point to
- * where the rest live. */
-export function groupForToday(tasks: Task[]): TodayGroup {
+/** Frog task pinned first, then open tasks due today or overdue, by manual
+ * sort order, soft-capped so Today never grows into an overwhelming list —
+ * see spec §3/§5.1. Tasks due in the future live only in Upcoming, and
+ * undated tasks live only in Someday — Today never duplicates either view.
+ * The overflow count is returned (not silently dropped) so the UI can
+ * point to where the rest live. */
+export function groupForToday(tasks: Task[], now: Date = new Date()): TodayGroup {
+  const todayStr = localDateOnly(now)
   const open = tasks.filter(isVisible)
   const frog = open.find((t) => t.is_frog) ?? null
-  const rest = open.filter((t) => t !== frog).sort(bySortOrder)
+  const dueTodayOrOverdue = open.filter((t) => t !== frog && t.due_date != null && t.due_date <= todayStr)
+  const rest = dueTodayOrOverdue.sort(bySortOrder)
   return {
     frog,
     rest: rest.slice(0, TODAY_SOFT_CAP),
@@ -54,6 +74,14 @@ export function groupForSomeday(tasks: Task[]): Task[] {
 
 export function snoozedTasks(tasks: Task[]): Task[] {
   return tasks.filter((t) => t.status === 'snoozed')
+}
+
+/** Completed tasks, most recently finished first — there was previously no
+ * way to see these at all once marked done. */
+export function groupForDone(tasks: Task[]): Task[] {
+  return tasks
+    .filter((t) => t.status === 'done')
+    .sort((a, b) => (b.completed_at ?? '').localeCompare(a.completed_at ?? ''))
 }
 
 function pauseDurationMs(pause: PauseEvent, now: Date): number {
@@ -122,4 +150,62 @@ export function isCleanCompletion(sessions: FocusSession[], pauses: PauseEvent[]
 export function pauseNudge(pauseCountForSession: number): string | null {
   if (pauseCountForSession < PAUSE_NUDGE_THRESHOLD) return null
   return "This one's been paused a few times — want to break it up or reschedule it?"
+}
+
+/** `snooze_count` was tracked from the start but never surfaced anywhere —
+ * the spec explicitly wants a soft nudge once it climbs, same no-guilt
+ * framing as `pauseNudge`. */
+export function snoozeNudge(snoozeCount: number): string | null {
+  if (snoozeCount < SNOOZE_NUDGE_THRESHOLD) return null
+  return "This one's been snoozed a lot — want to reschedule it, break it into something smaller, or let it go?"
+}
+
+/** Every local calendar day that had *some* focus activity — a work session
+ * started, or a task completed — counted as "showed up," not "finished
+ * everything." Powers the streak below; a day with no activity is just an
+ * absent date, not a recorded failure. */
+export function computeActiveDates(sessions: FocusSession[], tasks: Task[]): Set<string> {
+  const dates = new Set<string>()
+  for (const s of sessions) {
+    if (s.kind === 'work') dates.add(isoToLocalDateKey(s.started_at))
+  }
+  for (const t of tasks) {
+    if (t.completed_at) dates.add(isoToLocalDateKey(t.completed_at))
+  }
+  return dates
+}
+
+/** Consecutive active days ending at today. If today has no activity yet,
+ * counting starts from yesterday instead — a streak isn't broken mid-day,
+ * only once a full day passes with nothing logged. */
+export function currentStreak(activeDates: Set<string>, now: Date = new Date()): number {
+  let cursor = now
+  if (!activeDates.has(localDateOnly(cursor))) {
+    cursor = new Date(cursor)
+    cursor.setDate(cursor.getDate() - 1)
+  }
+  let streak = 0
+  while (activeDates.has(localDateOnly(cursor))) {
+    streak++
+    cursor = new Date(cursor)
+    cursor.setDate(cursor.getDate() - 1)
+  }
+  return streak
+}
+
+export interface TodaySummary {
+  totalMs: number
+  sessionCount: number
+}
+
+/** Today's focused time/session count across every task — the positive
+ * momentum signal the feature was missing; deliberately global (not
+ * per-task) so it reads as "how today went," not another per-item stat. */
+export function todaySummary(sessions: FocusSession[], pauses: PauseEvent[], now: Date = new Date()): TodaySummary {
+  const todayKey = localDateOnly(now)
+  const todaysWork = sessions.filter((s) => s.kind === 'work' && isoToLocalDateKey(s.started_at) === todayKey)
+  return {
+    totalMs: activeWorkMs(todaysWork, pauses, now),
+    sessionCount: todaysWork.length,
+  }
 }

@@ -13,7 +13,7 @@ import {
   useSkipBreak,
   type ActiveSession,
 } from '@/lib/focusQueries'
-import { activeWorkMs, budgetBurn, pauseNudge } from '@/lib/focusSelectors'
+import { activeWorkMs, budgetBurn, cycleCounts, pauseNudge } from '@/lib/focusSelectors'
 import type { PauseReason } from '@/types/focus'
 
 function formatDuration(ms: number): string {
@@ -23,9 +23,17 @@ function formatDuration(ms: number): string {
   return `${minutes}:${seconds.toString().padStart(2, '0')}`
 }
 
+function formatMinutes(ms: number): string {
+  const minutes = Math.round(ms / 60_000)
+  return minutes < 1 ? '<1m' : `${minutes}m`
+}
+
 /** Elapsed/remaining is always computed from stored timestamps, never a
  * trusted in-memory countdown — iOS suspends timers when this PWA is
- * backgrounded, per spec §7. The interval here only drives the redraw. */
+ * backgrounded, per spec §7. The interval here only drives the redraw; the
+ * actual work→break→work cycling happens server-side (see
+ * `advanceIfElapsed` in focusQueries.ts) and shows up here on the next
+ * poll — Pause/End/Done are the only ways to interrupt it. */
 export function ActiveSessionBar({ active }: { active: ActiveSession }) {
   const [, forceTick] = useState(0)
   const [pauseSheetOpen, setPauseSheetOpen] = useState(false)
@@ -53,14 +61,23 @@ export function ActiveSessionBar({ active }: { active: ActiveSession }) {
 
   const burn = history ? budgetBurn(task, history.sessions, history.pauses, now) : null
   const nudge = pauseNudge(pauses.length)
+  const totalSpentMs = history ? activeWorkMs(history.sessions, history.pauses, now) : 0
+  const { workSessions } = history ? cycleCounts(history.sessions) : { workSessions: 0 }
+  const cycleOrdinal = history
+    ? history.sessions.filter((s) => s.kind === session.kind).findIndex((s) => s.id === session.id) + 1 || 1
+    : 1
 
   return (
-    <Card className="gap-3 border-primary/30 p-4 py-0">
+    <Card className="animate-in fade-in slide-in-from-top-2 gap-3 border-primary/30 p-4 py-0 duration-300">
       <div className="flex items-center justify-between gap-2 pt-4">
         <div className="min-w-0">
           <p className="truncate text-sm font-medium">{isBreak ? 'Break' : task.title}</p>
           <p className="text-xs text-muted-foreground">
-            {isPaused ? 'Paused' : isBreak ? 'Short break' : 'Focusing'}
+            {isPaused
+              ? 'Paused'
+              : isBreak
+                ? `Short break · #${cycleOrdinal}`
+                : `Focusing · session #${cycleOrdinal}`}
           </p>
         </div>
         <p className="shrink-0 font-mono text-xl tabular-nums">
@@ -68,12 +85,23 @@ export function ActiveSessionBar({ active }: { active: ActiveSession }) {
         </p>
       </div>
 
+      {workSessions > 0 && (
+        <p className="text-xs tabular-nums text-muted-foreground">
+          {formatMinutes(totalSpentMs)} total across {workSessions} session{workSessions === 1 ? '' : 's'} on this
+          task — carried over even after ending a session early.
+        </p>
+      )}
       {!isBreak && burn && <BudgetBar burn={burn} />}
       {nudge && <p className="text-xs text-muted-foreground">{nudge}</p>}
 
       <div className="flex gap-2 pb-4">
         {isBreak ? (
-          <Button variant="outline" className="h-10 flex-1" onClick={() => skipBreak.mutate(session.id)}>
+          <Button
+            variant="outline"
+            className="h-10 flex-1 active:scale-[0.97] motion-reduce:active:scale-100"
+            onClick={() => skipBreak.mutate(session.id)}
+            title="Ends the break early so you can start a new focus block right away"
+          >
             <SkipForward />
             Skip break
           </Button>
@@ -81,7 +109,7 @@ export function ActiveSessionBar({ active }: { active: ActiveSession }) {
           <>
             {isPaused ? (
               <Button
-                className="h-10 flex-1"
+                className="h-10 flex-1 active:scale-[0.97] motion-reduce:active:scale-100"
                 onClick={() => resumeSession.mutate(session.id)}
                 disabled={resumeSession.isPending}
               >
@@ -91,7 +119,7 @@ export function ActiveSessionBar({ active }: { active: ActiveSession }) {
             ) : (
               <Button
                 variant="outline"
-                className="h-10 flex-1"
+                className="h-10 flex-1 active:scale-[0.97] motion-reduce:active:scale-100"
                 onClick={() => setPauseSheetOpen(true)}
               >
                 <Pause />
@@ -100,14 +128,16 @@ export function ActiveSessionBar({ active }: { active: ActiveSession }) {
             )}
             <Button
               variant="outline"
-              className="h-10 flex-1"
+              className="h-10 flex-1 active:scale-[0.97] motion-reduce:active:scale-100"
               onClick={() => endWorkSession.mutate(session.id)}
               disabled={endWorkSession.isPending || isPaused}
+              title="Ends this block now and starts a 5-minute break — the time already spent is kept, a new block starts fresh at 25 min next time"
             >
-              End & break
+              <SkipForward />
+              End
             </Button>
             <Button
-              className="h-10 flex-1"
+              className="h-10 flex-1 active:scale-[0.97] motion-reduce:active:scale-100"
               onClick={() => completeTask.mutate(task)}
               disabled={completeTask.isPending}
             >
