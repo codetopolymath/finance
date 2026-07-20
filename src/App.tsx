@@ -20,6 +20,7 @@ const Loans = lazy(() => import('@/routes/Loans'))
 const Automations = lazy(() => import('@/routes/Automations'))
 const ReceiptCapture = lazy(() => import('@/routes/ReceiptCapture'))
 const Profile = lazy(() => import('@/routes/Profile'))
+const Focus = lazy(() => import('@/routes/Focus'))
 
 const PAGE_TITLES: Record<string, string> = {
   '/': 'Dashboard',
@@ -29,6 +30,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/automations': 'Automations',
   '/automations/receipt': 'Add from Receipt',
   '/profile': 'Profile',
+  '/focus': 'Focus',
 }
 
 function App() {
@@ -72,6 +74,7 @@ function App() {
               <Route path="/automations" element={<Automations />} />
               <Route path="/automations/receipt" element={<ReceiptCapture />} />
               <Route path="/profile" element={<Profile />} />
+              <Route path="/focus" element={<Focus />} />
             </Routes>
           </Suspense>
         </div>

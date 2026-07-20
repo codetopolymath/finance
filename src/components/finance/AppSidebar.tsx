@@ -8,6 +8,7 @@ import {
   LogOut,
   Wallet,
   Zap,
+  Target,
 } from 'lucide-react'
 import {
   Sidebar,
@@ -29,6 +30,7 @@ const NAV_ITEMS = [
   { title: 'Insights', url: '/insights', icon: LineChart },
   { title: 'Loans', url: '/loans', icon: Landmark },
   { title: 'Automations', url: '/automations', icon: Zap },
+  { title: 'Focus', url: '/focus', icon: Target },
 ]
 
 export function AppSidebar() {

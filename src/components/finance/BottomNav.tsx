@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { LayoutDashboard, ArrowLeftRight, LineChart, Landmark, Zap } from 'lucide-react'
+import { LayoutDashboard, ArrowLeftRight, LineChart, Landmark, Zap, Target } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const NAV_ITEMS = [
@@ -8,6 +8,7 @@ const NAV_ITEMS = [
   { title: 'Insights', url: '/insights', icon: LineChart },
   { title: 'Loans', url: '/loans', icon: Landmark },
   { title: 'Automations', url: '/automations', icon: Zap },
+  { title: 'Focus', url: '/focus', icon: Target },
 ]
 
 /** Primary navigation on phones — the offcanvas sidebar stays for account
@@ -18,7 +19,7 @@ export function BottomNav() {
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden">
-      <div className="grid grid-cols-5">
+      <div className="grid grid-cols-6">
         {NAV_ITEMS.map((item) => {
           const isActive =
             item.url === '/'
