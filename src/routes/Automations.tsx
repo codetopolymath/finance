@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { formatDistanceToNow } from 'date-fns'
-import { Loader2, LogOut, PlayCircle, Receipt, Sparkles } from 'lucide-react'
+import { Loader2, LogOut, PlayCircle, Receipt, Sparkles, User } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -104,10 +104,18 @@ function AccountSection() {
         </p>
       )}
       <Separator className="my-1" />
-      <Button variant="outline" onClick={signOut} className="w-fit">
-        <LogOut />
-        Sign out
-      </Button>
+      <div className="flex flex-wrap gap-2">
+        <Button variant="outline" asChild className="w-fit">
+          <Link to="/profile">
+            <User />
+            View profile
+          </Link>
+        </Button>
+        <Button variant="outline" onClick={signOut} className="w-fit">
+          <LogOut />
+          Sign out
+        </Button>
+      </div>
     </div>
   )
 }

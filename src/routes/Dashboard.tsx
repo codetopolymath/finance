@@ -10,6 +10,7 @@ import { MonthPicker } from '@/components/finance/MonthPicker'
 import { CategoryBreakdownChart } from '@/components/finance/CategoryBreakdownChart'
 import { TransactionRow } from '@/components/finance/TransactionRow'
 import { TransactionDetailDrawer } from '@/components/finance/TransactionDetailDrawer'
+import { CurrentAgeCard } from '@/components/finance/CurrentAgeCard'
 import { useTransactions } from '@/lib/queries'
 import { categoryBreakdown, filterByMonth, summarize } from '@/lib/selectors'
 import type { Transaction } from '@/types/transaction'
@@ -43,10 +44,11 @@ export default function Dashboard() {
     <div className="flex flex-col gap-6">
       <MonthPicker month={month} onChange={setMonth} />
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <MetricCard label="Income" value={summary.totalIn} tone="success" />
         <MetricCard label="Spent" value={summary.totalOut} tone="destructive" />
         <MetricCard label="Net" value={summary.net} tone={summary.net >= 0 ? 'success' : 'destructive'} />
+        <CurrentAgeCard />
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-5">
@@ -99,7 +101,8 @@ function DashboardSkeleton() {
   return (
     <div className="flex flex-col gap-6">
       <Skeleton className="h-9 w-48" />
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <Skeleton className="h-24" />
         <Skeleton className="h-24" />
         <Skeleton className="h-24" />
         <Skeleton className="h-24" />
