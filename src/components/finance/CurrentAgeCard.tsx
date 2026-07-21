@@ -15,18 +15,18 @@ export function CurrentAgeCard() {
   const animatedYears = Math.round(useCountUp(years))
 
   return (
-    <Card className="gap-2 py-4">
+    <Card className="gap-2 py-4 shadow-card">
       <CardHeader className="px-4">
         <CardTitle className="text-sm font-normal text-muted-foreground">Current age</CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-1 px-4">
-        <p className="text-2xl font-medium text-foreground">
+        <p className="text-display font-medium text-foreground">
           {animatedYears}
           <span className="ml-1 text-sm font-normal text-muted-foreground">
             yrs, {months} mo, {days} d
           </span>
         </p>
-        <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+        <p className="flex items-center gap-1.5 text-2xs text-muted-foreground">
           <Cake className="size-3.5" />
           {nextBirthdayIn === 0 ? 'Birthday is today' : `Next birthday in ${nextBirthdayIn} days`}
         </p>

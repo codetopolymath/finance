@@ -24,15 +24,20 @@ export function NetHeroCard({ net }: { net: number }) {
   )
 
   return (
-    <Card className={cn('gap-2 border-2 py-5', positive ? 'border-primary/30' : 'border-destructive/30')}>
-      <CardHeader className="px-5">
+    <Card
+      className={cn(
+        'gap-2 rounded-2xl py-6 shadow-hero',
+        positive ? 'border-primary/30' : 'border-destructive/30',
+      )}
+    >
+      <CardHeader className="px-6">
         <CardTitle className="text-sm font-normal text-muted-foreground">Net this month</CardTitle>
       </CardHeader>
-      <CardContent className="px-5">
+      <CardContent className="px-6">
         <p
           ref={ref}
           className={cn(
-            'text-4xl font-semibold tracking-tight tabular-nums',
+            'text-hero font-semibold tracking-tight tabular-nums',
             positive ? 'text-success' : 'text-destructive',
           )}
         >

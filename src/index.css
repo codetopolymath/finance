@@ -4,7 +4,9 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --radius: 0.5rem;
+  /* Slightly softer than shadcn's stock 0.5rem — matches Outfit's rounded
+   * geometric letterforms instead of the generic sharp-ish default. */
+  --radius: 0.625rem;
 
   --background: #fcfcfc;
   --foreground: #171717;
@@ -59,6 +61,14 @@
   --amort-interest: #3b82f6;
   --font-sans: "Outfit", ui-sans-serif, sans-serif;
   --font-mono: ui-monospace, "SF Mono", Consolas, monospace;
+
+  /* Shadows — stock shadcn cards only ever get shadow-sm (near-invisible).
+   * --shadow-card-value gives standard cards a touch more lift;
+   * --shadow-hero-value is a soft primary-tinted glow reserved for the one
+   * hero element per screen (NetHeroCard, an active Pomodoro session) so
+   * elevation itself carries meaning instead of being uniform everywhere. */
+  --shadow-card-value: 0 1px 2px 0 rgb(0 0 0 / 0.04), 0 2px 8px -2px rgb(0 0 0 / 0.06);
+  --shadow-hero-value: 0 8px 30px -10px rgb(31 157 115 / 0.35), 0 2px 8px -2px rgb(0 0 0 / 0.06);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -111,6 +121,7 @@
      * sits above the dark lightness band, so it steps down one notch. */
     --amort-principal: #0ea371;
     --amort-interest: #3b82f6;
+    --shadow-hero-value: 0 8px 30px -10px rgb(45 212 160 / 0.3), 0 2px 8px -2px rgb(0 0 0 / 0.3);
   }
 }
 
@@ -148,7 +159,23 @@
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+  --radius-xl: calc(var(--radius) + 6px);
+  --radius-2xl: calc(var(--radius) + 12px);
+
+  /* Type scale — three named sizes beyond Tailwind's defaults, for the
+   * hierarchy jumps a data-dense dashboard needs: a true hero number, a
+   * section-level stat number, and dense metadata smaller than text-xs.
+   * Body/label text stays on Tailwind's own scale (text-sm/text-xs) —
+   * this only adds the extremes. See DESIGN.md. */
+  --text-2xs: 0.6875rem;
+  --text-2xs--line-height: 1.4;
+  --text-display: 1.875rem;
+  --text-display--line-height: 1.15;
+  --text-hero: 2.75rem;
+  --text-hero--line-height: 1.05;
+
+  --shadow-card: var(--shadow-card-value);
+  --shadow-hero: var(--shadow-hero-value);
 }
 
 @layer base {

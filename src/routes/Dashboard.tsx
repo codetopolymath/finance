@@ -60,7 +60,7 @@ export default function Dashboard() {
       </div>
 
       <div data-fade-item className="grid grid-cols-1 gap-4 lg:grid-cols-5">
-        <Card className="lg:col-span-2">
+        <Card className="lg:col-span-2 shadow-card">
           <CardHeader>
             <CardTitle className="text-base font-medium">Where it went</CardTitle>
           </CardHeader>
@@ -69,7 +69,7 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        <Card className="lg:col-span-3">
+        <Card className="lg:col-span-3 shadow-card">
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-base font-medium">Recent transactions</CardTitle>
             <Button variant="ghost" size="sm" asChild>
@@ -109,8 +109,8 @@ function DashboardSkeleton() {
   return (
     <div className="flex flex-col gap-6">
       <Skeleton className="h-9 w-48" />
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Skeleton className="h-24" />
+      <Skeleton className="h-32 rounded-2xl" />
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <Skeleton className="h-24" />
         <Skeleton className="h-24" />
         <Skeleton className="h-24" />

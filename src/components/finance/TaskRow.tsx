@@ -119,7 +119,7 @@ export function TaskRow({
 
       <button type="button" className="min-w-0 flex-1 text-left" onClick={() => onOpenDetail(task)}>
         <p className="truncate text-sm">{task.title}</p>
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+        <div className="flex items-center gap-2 text-2xs text-muted-foreground">
           {task.due_date && <span>{formatShortDate(parseDateOnly(task.due_date))}</span>}
           {workSessions > 0 && (
             <span className="tabular-nums">

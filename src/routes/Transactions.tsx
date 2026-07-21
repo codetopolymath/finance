@@ -97,7 +97,7 @@ export default function Transactions() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2 rounded-xl border bg-card p-3 shadow-card">
         <div className="relative flex-1 basis-56">
           <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -164,10 +164,12 @@ export default function Transactions() {
         <div className="flex flex-col gap-6">
           {dayGroups.map((group) => (
             <div key={group.date.toISOString()}>
-              <p className="mb-1 px-2 text-xs font-medium text-muted-foreground">
-                {formatDayHeading(group.date)}
-              </p>
-              <div className="flex flex-col divide-y rounded-lg border">
+              <div className="sticky top-0 z-10 -mx-4 bg-background/95 px-4 py-1.5 backdrop-blur">
+                <p className="px-2 text-2xs font-medium text-muted-foreground">
+                  {formatDayHeading(group.date)}
+                </p>
+              </div>
+              <div className="flex flex-col divide-y rounded-lg border shadow-card">
                 {group.transactions.map((t) => (
                   <TransactionRow key={t.id} transaction={t} onClick={() => setSelected(t)} />
                 ))}
@@ -202,7 +204,7 @@ export default function Transactions() {
 function TransactionsSkeleton() {
   return (
     <div className="flex flex-col gap-4">
-      <Skeleton className="h-9 w-full" />
+      <Skeleton className="h-14 w-full rounded-xl" />
       <Skeleton className="h-40" />
       <Skeleton className="h-40" />
     </div>

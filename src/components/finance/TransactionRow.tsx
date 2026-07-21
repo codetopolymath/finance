@@ -16,7 +16,7 @@ export function TransactionRow({ transaction, onClick }: TransactionRowProps) {
     >
       <div className="min-w-0">
         <p className="truncate text-sm font-medium">{transaction.vendor ?? transaction.category}</p>
-        <p className="truncate text-xs text-muted-foreground">
+        <p className="truncate text-2xs text-muted-foreground">
           {transaction.category} · {formatTime(new Date(transaction.txn_at))}
         </p>
       </div>

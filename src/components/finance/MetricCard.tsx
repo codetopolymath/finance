@@ -19,12 +19,12 @@ export function MetricCard({ label, value, tone = 'default' }: MetricCardProps) 
   const animated = useCountUp(value)
 
   return (
-    <Card className="gap-2 py-4">
+    <Card className="gap-2 py-4 shadow-card">
       <CardHeader className="px-4">
         <CardTitle className="text-sm font-normal text-muted-foreground">{label}</CardTitle>
       </CardHeader>
       <CardContent className="px-4">
-        <p className={cn('text-2xl font-medium tabular-nums', TONE_CLASSES[tone])}>
+        <p className={cn('text-display font-medium tabular-nums', TONE_CLASSES[tone])}>
           {formatCurrency(animated)}
         </p>
       </CardContent>

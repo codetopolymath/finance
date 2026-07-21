@@ -69,7 +69,7 @@ export function ActiveSessionBar({ active }: { active: ActiveSession }) {
     : 1
 
   return (
-    <Card className="animate-in fade-in slide-in-from-top-2 gap-3 border-primary/30 p-4 py-0 duration-300">
+    <Card className="animate-in fade-in slide-in-from-top-2 gap-3 rounded-2xl border-primary/30 p-4 py-0 shadow-hero duration-300">
       <div className="flex items-center justify-between gap-2 pt-4">
         <div className="min-w-0">
           <p className="truncate text-sm font-medium">{isBreak ? 'Break' : task.title}</p>

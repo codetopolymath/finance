@@ -112,7 +112,7 @@ function DrawerBody({
               {transaction.utr && (
                 <>
                   <dt className="text-muted-foreground">UTR</dt>
-                  <dd className="break-all text-right font-mono text-xs">{transaction.utr}</dd>
+                  <dd className="break-all text-right font-mono text-2xs">{transaction.utr}</dd>
                 </>
               )}
             </dl>
