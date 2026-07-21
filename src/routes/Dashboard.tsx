@@ -6,11 +6,13 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { EmptyState } from '@/components/finance/EmptyState'
 import { MetricCard } from '@/components/finance/MetricCard'
+import { NetHeroCard } from '@/components/finance/NetHeroCard'
 import { MonthPicker } from '@/components/finance/MonthPicker'
 import { CategoryBreakdownChart } from '@/components/finance/CategoryBreakdownChart'
 import { TransactionRow } from '@/components/finance/TransactionRow'
 import { TransactionDetailDrawer } from '@/components/finance/TransactionDetailDrawer'
 import { CurrentAgeCard } from '@/components/finance/CurrentAgeCard'
+import { useFadeInStagger } from '@/hooks/use-fade-in-stagger'
 import { useTransactions } from '@/lib/queries'
 import { categoryBreakdown, filterByMonth, summarize } from '@/lib/selectors'
 import type { Transaction } from '@/types/transaction'
@@ -24,6 +26,7 @@ export default function Dashboard() {
   const summary = useMemo(() => summarize(monthTransactions), [monthTransactions])
   const categories = useMemo(() => categoryBreakdown(monthTransactions), [monthTransactions])
   const recent = monthTransactions.slice(0, 8)
+  const fadeRef = useFadeInStagger<HTMLDivElement>([month])
 
   if (isPending) {
     return <DashboardSkeleton />
@@ -41,17 +44,22 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      <MonthPicker month={month} onChange={setMonth} />
+    <div ref={fadeRef} className="flex flex-col gap-6">
+      <div data-fade-item>
+        <MonthPicker month={month} onChange={setMonth} />
+      </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div data-fade-item>
+        <NetHeroCard net={summary.net} />
+      </div>
+
+      <div data-fade-item className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <MetricCard label="Income" value={summary.totalIn} tone="success" />
         <MetricCard label="Spent" value={summary.totalOut} tone="destructive" />
-        <MetricCard label="Net" value={summary.net} tone={summary.net >= 0 ? 'success' : 'destructive'} />
         <CurrentAgeCard />
       </div>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-5">
+      <div data-fade-item className="grid grid-cols-1 gap-4 lg:grid-cols-5">
         <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle className="text-base font-medium">Where it went</CardTitle>

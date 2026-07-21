@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Drawer, DrawerClose, DrawerContent, DrawerFooter, DrawerHeader, DrawerTitle } from '@/components/ui/drawer'
 import { useIsMobile } from '@/hooks/use-mobile'
+import { useFadeInStagger } from '@/hooks/use-fade-in-stagger'
 import { EmptyState } from '@/components/finance/EmptyState'
 import { TaskCaptureBar } from '@/components/finance/TaskCaptureBar'
 import { TaskRow } from '@/components/finance/TaskRow'
@@ -39,6 +40,7 @@ export default function Focus() {
   const someday = useMemo(() => groupForSomeday(tasks ?? []), [tasks])
   const done = useMemo(() => groupForDone(tasks ?? []), [tasks])
   const snoozed = useMemo(() => snoozedTasks(tasks ?? []), [tasks])
+  const viewFadeRef = useFadeInStagger<HTMLDivElement>([view])
 
   if (isPending) {
     return <Skeleton className="h-72 w-full" />
@@ -101,8 +103,9 @@ export default function Focus() {
         </ToggleGroupItem>
       </ToggleGroup>
 
+      <div ref={viewFadeRef}>
       {view === 'today' && (
-        <div className="flex flex-col gap-2">
+        <div data-fade-item className="flex flex-col gap-2">
           {today.frog && <TaskRow {...rowProps(today.frog)} />}
           {today.rest.map((task) => (
             <TaskRow key={task.id} {...rowProps(task)} />
@@ -121,7 +124,7 @@ export default function Focus() {
       )}
 
       {view === 'upcoming' && (
-        <div className="flex flex-col gap-4">
+        <div data-fade-item className="flex flex-col gap-4">
           {upcoming.length === 0 ? (
             <EmptyState
               icon={ListChecks}
@@ -144,7 +147,7 @@ export default function Focus() {
       )}
 
       {view === 'someday' && (
-        <div className="flex flex-col gap-2">
+        <div data-fade-item className="flex flex-col gap-2">
           {someday.length === 0 ? (
             <EmptyState
               icon={ListChecks}
@@ -158,7 +161,7 @@ export default function Focus() {
       )}
 
       {view === 'done' && (
-        <div className="flex flex-col gap-2">
+        <div data-fade-item className="flex flex-col gap-2">
           {done.length === 0 ? (
             <EmptyState icon={ListChecks} title="Nothing done yet" description="Completed tasks show up here." />
           ) : (
@@ -166,6 +169,7 @@ export default function Focus() {
           )}
         </div>
       )}
+      </div>
 
       {snoozed.length > 0 && (
         <div className="flex items-center gap-1 self-start">

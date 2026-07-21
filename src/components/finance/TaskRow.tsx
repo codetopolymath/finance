@@ -1,6 +1,9 @@
+import { useRef } from 'react'
 import { Circle, CheckCircle2, Moon, Play } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
+import { gsap, useGSAP } from '@/lib/gsap'
+import { prefersReducedMotion } from '@/lib/motion'
 import { cn } from '@/lib/utils'
 import { useCompleteTask, useReopenTask, useSnoozeTask, useStartWorkSession, useUpdateTask } from '@/lib/focusQueries'
 import { activeWorkMs, cycleCounts, SNOOZE_NUDGE_THRESHOLD } from '@/lib/focusSelectors'
@@ -37,16 +40,38 @@ export function TaskRow({
   const startSession = useStartWorkSession()
   const updateTask = useUpdateTask()
 
+  const containerRef = useRef<HTMLDivElement | null>(null)
+  const frogRef = useRef<HTMLButtonElement | null>(null)
+  const checkRef = useRef<SVGSVGElement | null>(null)
+  const { contextSafe } = useGSAP(() => {}, { scope: containerRef })
+
   const handleStart = () => {
     startSession.mutate(task.id, {
       onError: (error) => toast.error(error instanceof Error ? error.message : "Couldn't start session"),
     })
   }
 
-  const handleToggleComplete = () => {
-    if (task.status === 'done') reopenTask.mutate(task.id)
-    else completeTask.mutate(task)
-  }
+  const handleToggleFrog = contextSafe(() => {
+    updateTask.mutate({ id: task.id, patch: { is_frog: !task.is_frog } })
+    if (!prefersReducedMotion() && frogRef.current) {
+      gsap.fromTo(
+        frogRef.current,
+        { y: 0, rotation: 0 },
+        { y: -6, rotation: -12, duration: 0.15, ease: 'power1.out', yoyo: true, repeat: 1 },
+      )
+    }
+  })
+
+  const handleToggleComplete = contextSafe(() => {
+    if (task.status === 'done') {
+      reopenTask.mutate(task.id)
+      return
+    }
+    completeTask.mutate(task)
+    if (!prefersReducedMotion() && checkRef.current) {
+      gsap.fromTo(checkRef.current, { scale: 0.7 }, { scale: 1, duration: 0.3, ease: 'back.out(2)' })
+    }
+  })
 
   const { workSessions } = cycleCounts(sessions)
   const spentMs = workSessions > 0 ? activeWorkMs(sessions, pauses, new Date()) : 0
@@ -54,6 +79,7 @@ export function TaskRow({
 
   return (
     <div
+      ref={containerRef}
       className={cn(
         'flex items-center gap-3 rounded-lg border px-3 py-2.5 transition-colors',
         task.is_frog && 'border-primary/40 bg-primary/5',
@@ -66,15 +92,20 @@ export function TaskRow({
         disabled={completeTask.isPending || reopenTask.isPending}
         className="shrink-0 text-muted-foreground transition-transform active:scale-90 hover:text-foreground motion-reduce:active:scale-100"
       >
-        {task.status === 'done' ? <CheckCircle2 className="size-5 text-primary" /> : <Circle className="size-5" />}
+        {task.status === 'done' ? (
+          <CheckCircle2 ref={checkRef} className="size-5 text-primary" />
+        ) : (
+          <Circle className="size-5" />
+        )}
       </button>
 
       {task.status !== 'done' && (
         <button
+          ref={frogRef}
           type="button"
           aria-label={task.is_frog ? "Unflag as today's priority" : "Flag as today's priority"}
           title={task.is_frog ? "Unflag as today's priority" : "Flag as today's priority"}
-          onClick={() => updateTask.mutate({ id: task.id, patch: { is_frog: !task.is_frog } })}
+          onClick={handleToggleFrog}
           disabled={updateTask.isPending}
           className={cn(
             'shrink-0 text-base leading-none transition-transform active:scale-90 motion-reduce:active:scale-100',

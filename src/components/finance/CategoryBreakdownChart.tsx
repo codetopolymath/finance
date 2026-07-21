@@ -1,12 +1,32 @@
+import { useRef } from 'react'
 import { format } from 'date-fns'
 import { Link } from 'react-router-dom'
 import { PieChart as PieChartIcon } from 'lucide-react'
 import { EmptyState } from '@/components/finance/EmptyState'
+import { gsap, useGSAP } from '@/lib/gsap'
 import { formatCurrency } from '@/lib/format'
 import { assignCategoryColors } from '@/lib/categoryColor'
 import type { CategoryTotal } from '@/lib/selectors'
 
 export function CategoryBreakdownChart({ data, month }: { data: CategoryTotal[]; month: Date }) {
+  const containerRef = useRef<HTMLDivElement | null>(null)
+
+  useGSAP(
+    () => {
+      const mm = gsap.matchMedia()
+      mm.add('(prefers-reduced-motion: no-preference)', () => {
+        gsap.from('[data-bar-fill]', {
+          scaleX: 0,
+          duration: 0.6,
+          ease: 'power2.out',
+          stagger: 0.05,
+        })
+      })
+      return () => mm.revert()
+    },
+    { scope: containerRef, dependencies: [data] },
+  )
+
   if (data.length === 0) {
     return (
       <EmptyState
@@ -23,7 +43,7 @@ export function CategoryBreakdownChart({ data, month }: { data: CategoryTotal[];
   const monthParam = format(month, 'yyyy-MM-dd')
 
   return (
-    <div className="flex flex-col gap-3">
+    <div ref={containerRef} className="flex flex-col gap-3">
       {colored.map((item) => {
         const percent = total > 0 ? (item.total / total) * 100 : 0
         const row = (
@@ -42,7 +62,8 @@ export function CategoryBreakdownChart({ data, month }: { data: CategoryTotal[];
             </div>
             <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
               <div
-                className="h-full rounded-full"
+                data-bar-fill
+                className="h-full origin-left rounded-full"
                 style={{ width: `${(item.total / max) * 100}%`, backgroundColor: item.color }}
               />
             </div>

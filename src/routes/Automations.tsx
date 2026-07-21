@@ -18,7 +18,7 @@ function SpendcheckCard() {
   const handleRun = () => {
     spendcheck.mutate(undefined, {
       onSuccess: () => toast.success('Started — check Claude for results'),
-      onError: (error) => toast.error(error instanceof Error ? error.message : 'Failed to start'),
+      onError: (error) => toast.error(error instanceof Error ? error.message : "Couldn't start the Spendcheck scan"),
     })
   }
 
@@ -46,7 +46,7 @@ function DayCleanupCard() {
     const selectedDate = dateInputRef.current?.value || date
     cleanup.mutate(selectedDate, {
       onSuccess: () => toast.success(`Started for ${selectedDate} — check Claude for results`),
-      onError: (error) => toast.error(error instanceof Error ? error.message : 'Failed to start'),
+      onError: (error) => toast.error(error instanceof Error ? error.message : "Couldn't start cleanup for that day"),
     })
   }
 

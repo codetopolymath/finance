@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import {
   Drawer,
   DrawerClose,
@@ -14,6 +14,8 @@ import { Textarea } from '@/components/ui/textarea'
 import { Separator } from '@/components/ui/separator'
 import { BudgetBar } from '@/components/finance/BudgetBar'
 import { useIsMobile } from '@/hooks/use-mobile'
+import { gsap, useGSAP } from '@/lib/gsap'
+import { prefersReducedMotion } from '@/lib/motion'
 import { cn } from '@/lib/utils'
 import { useFocusSessions, useUpdateTask } from '@/lib/focusQueries'
 import { budgetBurn, cycleCounts, isCleanCompletion, snoozeNudge } from '@/lib/focusSelectors'
@@ -50,6 +52,20 @@ function DrawerBody({ task }: { task: Task }) {
 
   const update = useUpdateTask()
   const { data: history } = useFocusSessions(task.id)
+  const headerRef = useRef<HTMLDivElement | null>(null)
+  const frogRef = useRef<HTMLButtonElement | null>(null)
+  const { contextSafe } = useGSAP(() => {}, { scope: headerRef })
+
+  const handleToggleFrog = contextSafe(() => {
+    update.mutate({ id: task.id, patch: { is_frog: !task.is_frog } })
+    if (!prefersReducedMotion() && frogRef.current) {
+      gsap.fromTo(
+        frogRef.current,
+        { y: 0, rotation: 0 },
+        { y: -6, rotation: -12, duration: 0.15, ease: 'power1.out', yoyo: true, repeat: 1 },
+      )
+    }
+  })
 
   const now = new Date()
   const sessions = history?.sessions ?? []
@@ -72,13 +88,14 @@ function DrawerBody({ task }: { task: Task }) {
 
   return (
     <>
-      <DrawerHeader>
+      <DrawerHeader ref={headerRef}>
         <div className="flex items-start justify-between gap-2">
           <DrawerTitle className="text-left">{task.title}</DrawerTitle>
           <button
+            ref={frogRef}
             type="button"
             aria-label={task.is_frog ? 'Unflag as most important' : "Flag as today's most important task"}
-            onClick={() => update.mutate({ id: task.id, patch: { is_frog: !task.is_frog } })}
+            onClick={handleToggleFrog}
             className={cn(
               'shrink-0 text-xl leading-none transition-transform active:scale-90 motion-reduce:active:scale-100',
               task.is_frog ? 'opacity-100 grayscale-0' : 'opacity-30 grayscale hover:opacity-60',

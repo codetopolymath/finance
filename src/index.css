@@ -12,22 +12,28 @@
   --card-foreground: #171717;
   --popover: #fcfcfc;
   --popover-foreground: #525252;
-  --primary: #72e3ad;
-  --primary-foreground: #1e2723;
+  --primary: #1f9d73;
+  --primary-foreground: #f4fbf7;
   --secondary: #fdfdfd;
   --secondary-foreground: #171717;
   --muted: #ededed;
   --muted-foreground: #202020;
   --accent: #ededed;
   --accent-foreground: #202020;
-  --destructive: #ca3214;
-  --destructive-foreground: #fffcfc;
+  /* Second accent voice, reserved for "something good just happened" moments
+   * only (streaks, milestones, the frog priority marker) — never used for
+   * default UI chrome, so it stays legible as a distinct signal from
+   * --primary/--accent. */
+  --accent-warm: #f0a940;
+  --accent-warm-foreground: #402d06;
+  --destructive: #c2410c;
+  --destructive-foreground: #fffaf5;
   --success: #0f6e56;
   --success-foreground: #ffffff;
   --border: #dfdfdf;
   --input: #f6f6f6;
-  --ring: #72e3ad;
-  --chart-1: #72e3ad;
+  --ring: #1f9d73;
+  --chart-1: #1f9d73;
   --chart-2: #3b82f6;
   --chart-3: #8b5cf6;
   --chart-4: #f59e0b;
@@ -57,28 +63,37 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #121212;
+    /* Warm near-black instead of a neutral-cool grey — paired with the
+     * de-saturated teal-green primary below so dark mode reads as this app's
+     * own identity rather than the generic "near-black + acid green" look. */
+    --background: #141312;
     --foreground: #e2e8f0;
+    /* Kept at the original #171717 — the amort/category dark palette below is
+     * validated against this exact surface; changing it would need
+     * re-validation. Only --background (the page, not the card surface)
+     * moves to the warmer near-black. */
     --card: #171717;
     --card-foreground: #e2e8f0;
-    --popover: #242424;
+    --popover: #242220;
     --popover-foreground: #a9a9a9;
-    --primary: #4ade80;
-    --primary-foreground: #062012;
-    --secondary: #242424;
+    --primary: #2dd4a0;
+    --primary-foreground: #052018;
+    --secondary: #242220;
     --secondary-foreground: #fafafa;
-    --muted: #1f1f1f;
+    --muted: #211f1d;
     --muted-foreground: #a2a2a2;
-    --accent: #313131;
+    --accent: #322f2b;
     --accent-foreground: #fafafa;
+    --accent-warm: #f2b34d;
+    --accent-warm-foreground: #2e1f04;
     --destructive: #e5836f;
     --destructive-foreground: #2a0d08;
-    --success: #4ade80;
-    --success-foreground: #062012;
-    --border: #292929;
-    --input: #242424;
-    --ring: #4ade80;
-    --chart-1: #4ade80;
+    --success: #2dd4a0;
+    --success-foreground: #052018;
+    --border: #2c2926;
+    --input: #242220;
+    --ring: #2dd4a0;
+    --chart-1: #2dd4a0;
     --chart-2: #60a5fa;
     --chart-3: #a78bfa;
     --chart-4: #fbbf24;
@@ -114,6 +129,8 @@
   --color-muted-foreground: var(--muted-foreground);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
+  --color-accent-warm: var(--accent-warm);
+  --color-accent-warm-foreground: var(--accent-warm-foreground);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
   --color-success: var(--success);

@@ -4,6 +4,7 @@ import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { BudgetBar } from '@/components/finance/BudgetBar'
 import { PauseReasonSheet } from '@/components/finance/PauseReasonSheet'
+import { SessionRing } from '@/components/finance/SessionRing'
 import {
   useCompleteTask,
   useEndWorkSession,
@@ -80,9 +81,11 @@ export function ActiveSessionBar({ active }: { active: ActiveSession }) {
                 : `Focusing · session #${cycleOrdinal}`}
           </p>
         </div>
-        <p className="shrink-0 font-mono text-xl tabular-nums">
-          {remainingMs >= 0 ? formatDuration(remainingMs) : `+${formatDuration(-remainingMs)}`}
-        </p>
+        <SessionRing
+          progress={plannedMs > 0 ? elapsedMs / plannedMs : 0}
+          isBreak={isBreak}
+          label={remainingMs >= 0 ? formatDuration(remainingMs) : `+${formatDuration(-remainingMs)}`}
+        />
       </div>
 
       {workSessions > 0 && (

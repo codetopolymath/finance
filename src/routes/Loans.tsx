@@ -1,11 +1,12 @@
 import { useEffect, useRef, type ReactNode } from 'react'
 import { startOfDay } from 'date-fns'
-import { AlertTriangle, CheckCircle2, Landmark } from 'lucide-react'
+import { AlertTriangle, CheckCircle2, Landmark, PartyPopper } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { EmptyState } from '@/components/finance/EmptyState'
 import { LoanAmortizationChart } from '@/components/finance/LoanAmortizationChart'
+import { gsap, useGSAP } from '@/lib/gsap'
 import { useLoans } from '@/lib/loanQueries'
 import { summarizeLoan } from '@/lib/loanSelectors'
 import { formatCurrency, formatFullDate, formatShortDate, parseDateOnly } from '@/lib/format'
@@ -47,9 +48,22 @@ export default function Loans() {
 
 function LoanCard({ loan }: { loan: LoanWithInstallments }) {
   const summary = summarizeLoan(loan)
+  const isPaidOff = summary.progressPercent >= 100
+  const progressRef = useRef<HTMLDivElement | null>(null)
+
+  useGSAP(
+    () => {
+      const mm = gsap.matchMedia()
+      mm.add('(prefers-reduced-motion: no-preference)', () => {
+        gsap.from('[data-progress-fill]', { scaleX: 0, duration: 0.7, ease: 'power2.out' })
+      })
+      return () => mm.revert()
+    },
+    { scope: progressRef, dependencies: [summary.progressPercent] },
+  )
 
   return (
-    <Card>
+    <Card className={cn(isPaidOff && 'border-accent-warm/40')}>
       <CardHeader>
         <CardTitle className="flex items-center justify-between text-base font-medium">
           <span>
@@ -76,11 +90,20 @@ function LoanCard({ loan }: { loan: LoanWithInstallments }) {
           />
           <StatCard
             label="Progress"
-            value={`${Math.round(summary.progressPercent)}%`}
+            value={isPaidOff ? 'Paid off' : `${Math.round(summary.progressPercent)}%`}
             detail={`${summary.paidCount}/${summary.totalCount} EMIs paid`}
+            valueClassName={isPaidOff ? 'text-accent-warm' : undefined}
+            icon={isPaidOff ? <PartyPopper className="size-4 text-accent-warm" /> : undefined}
           >
-            <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
-              <div className="h-full rounded-full bg-primary" style={{ width: `${summary.progressPercent}%` }} />
+            <div ref={progressRef} className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+              <div
+                data-progress-fill
+                className={cn(
+                  'h-full origin-left rounded-full',
+                  isPaidOff ? 'bg-accent-warm' : 'bg-primary',
+                )}
+                style={{ width: `${Math.min(100, summary.progressPercent)}%` }}
+              />
             </div>
           </StatCard>
         </div>
@@ -101,11 +124,15 @@ function StatCard({
   label,
   value,
   detail,
+  valueClassName,
+  icon,
   children,
 }: {
   label: string
   value: string
   detail?: string
+  valueClassName?: string
+  icon?: ReactNode
   children?: ReactNode
 }) {
   return (
@@ -114,7 +141,10 @@ function StatCard({
         <CardTitle className="text-xs font-normal text-muted-foreground">{label}</CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-2 px-4">
-        <p className="text-2xl font-medium tabular-nums">{value}</p>
+        <p className={cn('flex items-center gap-1.5 text-2xl font-medium tabular-nums', valueClassName)}>
+          {icon}
+          {value}
+        </p>
         {detail && <p className="text-xs text-muted-foreground">{detail}</p>}
         {children}
       </CardContent>

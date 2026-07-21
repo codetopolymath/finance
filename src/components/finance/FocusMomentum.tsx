@@ -1,4 +1,6 @@
+import { useRef } from 'react'
 import { Flame } from 'lucide-react'
+import { gsap, useGSAP } from '@/lib/gsap'
 import { computeActiveDates, currentStreak, todaySummary } from '@/lib/focusSelectors'
 import type { FocusSession, PauseEvent, Task } from '@/types/focus'
 
@@ -22,6 +24,19 @@ export function FocusMomentum({ tasks, sessions, pauses }: FocusMomentumProps) {
   const activeDates = computeActiveDates(sessions, tasks)
   const streak = currentStreak(activeDates, now)
   const today = todaySummary(sessions, pauses, now)
+  const streakRef = useRef<HTMLSpanElement | null>(null)
+
+  useGSAP(
+    () => {
+      if (streak === 0) return
+      const mm = gsap.matchMedia()
+      mm.add('(prefers-reduced-motion: no-preference)', () => {
+        gsap.from(streakRef.current, { scale: 0.85, autoAlpha: 0, duration: 0.4, ease: 'back.out(1.7)' })
+      })
+      return () => mm.revert()
+    },
+    { scope: streakRef, dependencies: [streak] },
+  )
 
   if (streak === 0 && today.sessionCount === 0) {
     return <p className="px-1 text-xs text-muted-foreground">Start a focus session today to begin a streak.</p>
@@ -30,8 +45,11 @@ export function FocusMomentum({ tasks, sessions, pauses }: FocusMomentumProps) {
   return (
     <div className="flex flex-wrap items-center gap-3 px-1 text-xs text-muted-foreground">
       {streak > 0 && (
-        <span className="flex items-center gap-1 font-medium text-foreground">
-          <Flame className="size-3.5 text-primary" />
+        <span
+          ref={streakRef}
+          className="flex items-center gap-1 rounded-full bg-accent-warm/15 px-2.5 py-1 font-medium text-accent-warm"
+        >
+          <Flame className="size-3.5" />
           {streak}-day streak
         </span>
       )}
