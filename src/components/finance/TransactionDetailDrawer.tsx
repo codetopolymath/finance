@@ -205,6 +205,7 @@ function TransactionEditForm({
               setTimeout(() => target.scrollIntoView({ block: 'center', behavior: 'smooth' }), 300)
             }}
             placeholder="Add a note"
+            enterKeyHint="done"
           />
         </div>
         {update.isError && (

@@ -4,7 +4,6 @@ import { AlertTriangle, CheckCircle2, Landmark } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { EmptyState } from '@/components/finance/EmptyState'
 import { LoanAmortizationChart } from '@/components/finance/LoanAmortizationChart'
 import { useLoans } from '@/lib/loanQueries'
@@ -135,67 +134,55 @@ function ScheduleTable({
   // Same paid predicate as summarizeLoan, so badge counts always match the
   // "x/y EMIs paid" stat above the table.
   const todayStart = startOfDay(new Date())
-  const nextRowRef = useRef<HTMLTableRowElement | null>(null)
+  const nextRowRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
     nextRowRef.current?.scrollIntoView({ block: 'center' })
   }, [])
 
   return (
-    <div className="max-h-80 overflow-y-auto rounded-lg border">
-      <Table>
-        <TableHeader className="sticky top-0 bg-card">
-          <TableRow>
-            <TableHead className="hidden sm:table-cell">#</TableHead>
-            <TableHead>Due date</TableHead>
-            <TableHead className="hidden text-right sm:table-cell">Principal</TableHead>
-            <TableHead className="hidden text-right sm:table-cell">Interest</TableHead>
-            <TableHead className="text-right">Amount</TableHead>
-            <TableHead>Status</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {installments.map((installment) => {
-            const dueDate = parseDateOnly(installment.due_date)
-            const isNext = installment.id === nextInstallmentId
-            const isPaid = dueDate < todayStart
+    <div className="flex max-h-80 flex-col gap-2 overflow-y-auto rounded-lg border p-2">
+      {installments.map((installment) => {
+        const dueDate = parseDateOnly(installment.due_date)
+        const isNext = installment.id === nextInstallmentId
+        const isPaid = dueDate < todayStart
 
-            return (
-              <TableRow key={installment.id} ref={isNext ? nextRowRef : undefined}>
-                <TableCell className="hidden tabular-nums text-muted-foreground sm:table-cell">
-                  {installment.installment_num}
-                </TableCell>
-                <TableCell className={cn(isPaid && 'text-muted-foreground')}>
-                  {formatShortDate(dueDate)}
-                </TableCell>
-                <TableCell className="hidden text-right font-mono tabular-nums text-muted-foreground sm:table-cell">
-                  {formatCurrency(installment.principal)}
-                </TableCell>
-                <TableCell className="hidden text-right font-mono tabular-nums text-muted-foreground sm:table-cell">
-                  {formatCurrency(installment.interest)}
-                </TableCell>
-                <TableCell className="text-right font-mono font-medium tabular-nums">
-                  {formatCurrency(installment.amount)}
-                </TableCell>
-                <TableCell>
-                  {isNext && (
-                    <Badge variant="default" className="text-xs">
-                      Next
-                    </Badge>
-                  )}
-                  {isPaid && (
-                    <Badge variant="secondary" className="text-xs text-success">
-                      <CheckCircle2 />
-                      Paid
-                    </Badge>
-                  )}
-                </TableCell>
-              </TableRow>
-            )
-          })}
-        </TableBody>
-        {payoffDate && <TableCaption className="px-3 pb-3">Expected payoff: {formatFullDate(payoffDate)}</TableCaption>}
-      </Table>
+        return (
+          <div
+            key={installment.id}
+            ref={isNext ? nextRowRef : undefined}
+            className="flex items-center justify-between gap-3 rounded-md border px-3 py-2.5"
+          >
+            <div className="flex min-w-0 flex-col gap-0.5">
+              <span className={cn('text-sm', isPaid && 'text-muted-foreground')}>
+                {formatShortDate(dueDate)}
+              </span>
+              <span className="font-mono text-xs tabular-nums text-muted-foreground">
+                P {formatCurrency(installment.principal)} · I {formatCurrency(installment.interest)}
+              </span>
+            </div>
+            <div className="flex shrink-0 flex-col items-end gap-1">
+              <span className="font-mono text-sm font-medium tabular-nums">
+                {formatCurrency(installment.amount)}
+              </span>
+              {isNext && (
+                <Badge variant="default" className="text-xs">
+                  Next
+                </Badge>
+              )}
+              {isPaid && (
+                <Badge variant="secondary" className="text-xs text-success">
+                  <CheckCircle2 />
+                  Paid
+                </Badge>
+              )}
+            </div>
+          </div>
+        )
+      })}
+      {payoffDate && (
+        <p className="px-1 pt-1 text-xs text-muted-foreground">Expected payoff: {formatFullDate(payoffDate)}</p>
+      )}
     </div>
   )
 }

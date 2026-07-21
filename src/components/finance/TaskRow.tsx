@@ -102,7 +102,7 @@ export function TaskRow({
       {isActiveTask ? (
         <span className="shrink-0 text-xs text-muted-foreground">Focusing…</span>
       ) : task.status === 'done' ? null : (
-        <div className="flex shrink-0 items-center gap-1">
+        <div className="flex shrink-0 items-center gap-2">
           <Button
             variant="ghost"
             size="icon-sm"
@@ -110,7 +110,7 @@ export function TaskRow({
             title="Snooze to Someday"
             onClick={() => snoozeTask.mutate(task)}
             disabled={snoozeTask.isPending}
-            className="active:scale-90 motion-reduce:active:scale-100"
+            className="size-11 active:scale-90 motion-reduce:active:scale-100"
           >
             <Moon />
           </Button>
@@ -120,7 +120,7 @@ export function TaskRow({
             aria-label="Start focus session"
             onClick={handleStart}
             disabled={hasActiveSession || startSession.isPending}
-            className="active:scale-90 motion-reduce:active:scale-100"
+            className="size-11 active:scale-90 motion-reduce:active:scale-100"
           >
             <Play />
           </Button>

@@ -179,7 +179,7 @@ export default function Focus() {
                 variant="ghost"
                 size="icon-sm"
                 aria-label="What does snoozing do?"
-                className="text-muted-foreground"
+                className="size-11 text-muted-foreground"
               >
                 <Info className="size-4" />
               </Button>
@@ -258,6 +258,7 @@ function SnoozedReviewSheet({
                       className="h-9"
                       value={dueDate}
                       onChange={(e) => setDueDate(e.target.value)}
+                      enterKeyHint="done"
                     />
                     <Button
                       size="sm"

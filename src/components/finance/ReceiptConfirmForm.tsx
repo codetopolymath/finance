@@ -106,12 +106,23 @@ export function ReceiptConfirmForm({ parsed, imagePreviewUrl, onSaved, onCancel 
 
       <div className="flex flex-col gap-1.5">
         <label className="text-sm text-muted-foreground">Amount</label>
-        <Input value={amount} onChange={(e) => setAmount(e.target.value)} inputMode="decimal" className="h-11" />
+        <Input
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
+          inputMode="decimal"
+          enterKeyHint="next"
+          className="h-11"
+        />
       </div>
 
       <div className="flex flex-col gap-1.5">
         <label className="text-sm text-muted-foreground">Vendor / counterparty</label>
-        <Input value={vendor} onChange={(e) => setVendor(e.target.value)} className="h-11" />
+        <Input
+          value={vendor}
+          onChange={(e) => setVendor(e.target.value)}
+          enterKeyHint="next"
+          className="h-11"
+        />
       </div>
 
       <div className="flex flex-col gap-1.5">
@@ -164,12 +175,17 @@ export function ReceiptConfirmForm({ parsed, imagePreviewUrl, onSaved, onCancel 
 
       <div className="flex flex-col gap-1.5">
         <label className="text-sm text-muted-foreground">UTR</label>
-        <Input value={utr} onChange={(e) => setUtr(e.target.value)} className="h-11 font-mono text-xs" />
+        <Input
+          value={utr}
+          onChange={(e) => setUtr(e.target.value)}
+          enterKeyHint="done"
+          className="h-11 font-mono text-xs"
+        />
       </div>
 
       <div className="flex flex-col gap-1.5">
         <label className="text-sm text-muted-foreground">Note</label>
-        <Textarea rows={2} value={note} onChange={(e) => setNote(e.target.value)} />
+        <Textarea rows={2} value={note} onChange={(e) => setNote(e.target.value)} enterKeyHint="done" />
       </div>
 
       <div className="flex flex-col gap-1.5">

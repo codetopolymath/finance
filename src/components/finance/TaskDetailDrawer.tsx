@@ -122,6 +122,7 @@ function DrawerBody({ task }: { task: Task }) {
             value={dueDate}
             onChange={(e) => setDueDate(e.target.value)}
             onFocus={(e) => scrollFieldIntoView(e.currentTarget)}
+            enterKeyHint="next"
             className="h-11"
           />
         </div>
@@ -135,6 +136,7 @@ function DrawerBody({ task }: { task: Task }) {
             type="number"
             min={1}
             inputMode="numeric"
+            enterKeyHint="next"
             value={budget}
             onChange={(e) => setBudget(e.target.value)}
             onFocus={(e) => scrollFieldIntoView(e.currentTarget)}
@@ -153,6 +155,7 @@ function DrawerBody({ task }: { task: Task }) {
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             onFocus={(e) => scrollFieldIntoView(e.currentTarget)}
+            enterKeyHint="done"
           />
         </div>
       </div>
