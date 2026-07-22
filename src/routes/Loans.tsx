@@ -141,7 +141,7 @@ function StatCard({
         <CardTitle className="text-xs font-normal text-muted-foreground">{label}</CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-2 px-4">
-        <p className={cn('flex items-center gap-1.5 text-2xl font-medium tabular-nums', valueClassName)}>
+        <p className={cn('flex items-center gap-1.5 text-display font-medium tabular-nums', valueClassName)}>
           {icon}
           {value}
         </p>
@@ -220,7 +220,16 @@ function ScheduleTable({
 function LoansSkeleton() {
   return (
     <div className="flex flex-col gap-6">
-      <Skeleton className="h-96 w-full" />
+      <div className="flex flex-col gap-4 rounded-2xl border p-5">
+        <Skeleton className="h-5 w-40" />
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <Skeleton className="h-24" />
+          <Skeleton className="h-24" />
+          <Skeleton className="h-24" />
+        </div>
+        <Skeleton className="h-40 w-full" />
+        <Skeleton className="h-32 w-full" />
+      </div>
     </div>
   )
 }

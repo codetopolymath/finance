@@ -101,7 +101,7 @@ export function ActiveSessionBar({ active }: { active: ActiveSession }) {
         {isBreak ? (
           <Button
             variant="outline"
-            className="h-10 flex-1 active:scale-[0.97] motion-reduce:active:scale-100"
+            className="h-11 flex-1 active:scale-[0.97] motion-reduce:active:scale-100"
             onClick={() => skipBreak.mutate(session.id)}
             title="Ends the break early so you can start a new focus block right away"
           >
@@ -112,7 +112,7 @@ export function ActiveSessionBar({ active }: { active: ActiveSession }) {
           <>
             {isPaused ? (
               <Button
-                className="h-10 flex-1 active:scale-[0.97] motion-reduce:active:scale-100"
+                className="h-11 flex-1 active:scale-[0.97] motion-reduce:active:scale-100"
                 onClick={() => resumeSession.mutate(session.id)}
                 disabled={resumeSession.isPending}
               >
@@ -122,7 +122,7 @@ export function ActiveSessionBar({ active }: { active: ActiveSession }) {
             ) : (
               <Button
                 variant="outline"
-                className="h-10 flex-1 active:scale-[0.97] motion-reduce:active:scale-100"
+                className="h-11 flex-1 active:scale-[0.97] motion-reduce:active:scale-100"
                 onClick={() => setPauseSheetOpen(true)}
               >
                 <Pause />
@@ -131,7 +131,7 @@ export function ActiveSessionBar({ active }: { active: ActiveSession }) {
             )}
             <Button
               variant="outline"
-              className="h-10 flex-1 active:scale-[0.97] motion-reduce:active:scale-100"
+              className="h-11 flex-1 active:scale-[0.97] motion-reduce:active:scale-100"
               onClick={() => endWorkSession.mutate(session.id)}
               disabled={endWorkSession.isPending || isPaused}
               title="Ends this block now and starts a 5-minute break — the time already spent is kept, a new block starts fresh at 25 min next time"
@@ -140,7 +140,7 @@ export function ActiveSessionBar({ active }: { active: ActiveSession }) {
               End
             </Button>
             <Button
-              className="h-10 flex-1 active:scale-[0.97] motion-reduce:active:scale-100"
+              className="h-11 flex-1 active:scale-[0.97] motion-reduce:active:scale-100"
               onClick={() => completeTask.mutate(task)}
               disabled={completeTask.isPending}
             >

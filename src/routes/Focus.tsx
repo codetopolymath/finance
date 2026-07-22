@@ -43,7 +43,7 @@ export default function Focus() {
   const viewFadeRef = useFadeInStagger<HTMLDivElement>([view])
 
   if (isPending) {
-    return <Skeleton className="h-72 w-full" />
+    return <FocusSkeleton />
   }
 
   if (isError) {
@@ -74,7 +74,7 @@ export default function Focus() {
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-6">
       <FocusMomentum tasks={tasks ?? []} sessions={history?.sessions ?? []} pauses={history?.pauses ?? []} />
 
       <TaskCaptureBar />
@@ -198,6 +198,21 @@ export default function Focus() {
 
       <TaskDetailDrawer task={detailTask} onOpenChange={(open) => !open && setDetailTask(null)} />
       <SnoozedReviewSheet open={reviewOpen} onOpenChange={setReviewOpen} tasks={snoozed} />
+    </div>
+  )
+}
+
+function FocusSkeleton() {
+  return (
+    <div className="flex flex-col gap-6">
+      <Skeleton className="h-20 w-full" />
+      <Skeleton className="h-11 w-full" />
+      <Skeleton className="h-8 w-full" />
+      <div className="flex flex-col gap-2">
+        <Skeleton className="h-14 w-full" />
+        <Skeleton className="h-14 w-full" />
+        <Skeleton className="h-14 w-full" />
+      </div>
     </div>
   )
 }

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { useQueryClient } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
 import { ReceiptUpload } from '@/components/finance/ReceiptUpload'
 import { ReceiptConfirmForm } from '@/components/finance/ReceiptConfirmForm'
 import { parseReceiptText } from '@/lib/receipt-parser'
@@ -38,15 +39,17 @@ export default function ReceiptCapture() {
       {step.stage === 'upload' && <ReceiptUpload onExtracted={handleExtracted} />}
 
       {step.stage === 'unrecognized' && (
-        <div className="flex flex-col gap-3 rounded-lg border p-6 text-center">
-          <p className="text-sm text-muted-foreground">{step.reason}</p>
-          <p className="text-xs text-muted-foreground">
-            Only PhonePe's "Paid to" / "Received from" share receipts are supported right now.
-          </p>
-          <Button variant="outline" onClick={() => setStep({ stage: 'upload' })} className="w-fit self-center">
-            Try another screenshot
-          </Button>
-        </div>
+        <Card>
+          <CardContent className="flex flex-col gap-3 text-center">
+            <p className="text-sm text-muted-foreground">{step.reason}</p>
+            <p className="text-xs text-muted-foreground">
+              Only PhonePe's "Paid to" / "Received from" share receipts are supported right now.
+            </p>
+            <Button variant="outline" onClick={() => setStep({ stage: 'upload' })} className="w-fit self-center">
+              Try another screenshot
+            </Button>
+          </CardContent>
+        </Card>
       )}
 
       {step.stage === 'confirm' && (

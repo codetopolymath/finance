@@ -81,7 +81,7 @@ function DrawerBody({
       <DrawerHeader>
         <DrawerDescription>{formatDateTime(new Date(transaction.txn_at))}</DrawerDescription>
         <DrawerTitle>
-          <Amount amount={transaction.amount} flowType={transaction.flow_type} className="text-2xl" />
+          <Amount amount={transaction.amount} flowType={transaction.flow_type} className="text-display" />
         </DrawerTitle>
       </DrawerHeader>
       {editing ? (

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { AlertTriangle, Search, SearchX } from 'lucide-react'
+import { AlertTriangle, ChevronDown, Loader2, Search, SearchX } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import {
   Select,
@@ -186,6 +186,7 @@ export default function Transactions() {
               disabled={isFetchingNextPage}
               className="self-center"
             >
+              {isFetchingNextPage ? <Loader2 className="animate-spin" /> : <ChevronDown />}
               {isFetchingNextPage ? 'Loading…' : 'Load more'}
             </Button>
           )}

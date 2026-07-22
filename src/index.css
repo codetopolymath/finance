@@ -32,6 +32,13 @@
   --destructive-foreground: #fffaf5;
   --success: #0f6e56;
   --success-foreground: #ffffff;
+  /* Caution/attention signal — distinct from --accent-warm, which is
+   * reserved exclusively for celebration moments. --warning is for inline
+   * text/icon cautions (a mismatch, an overtime session) and is never used
+   * as a bold fill/badge the way --accent-warm is, so the two stay visually
+   * and semantically separate even though both sit in the amber family. */
+  --warning: #b45309;
+  --warning-foreground: #fffbeb;
   --border: #dfdfdf;
   --input: #f6f6f6;
   --ring: #1f9d73;
@@ -100,6 +107,8 @@
     --destructive-foreground: #2a0d08;
     --success: #2dd4a0;
     --success-foreground: #052018;
+    --warning: #fbbf24;
+    --warning-foreground: #451a03;
     --border: #2c2926;
     --input: #242220;
     --ring: #2dd4a0;
@@ -146,6 +155,8 @@
   --color-destructive-foreground: var(--destructive-foreground);
   --color-success: var(--success);
   --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);

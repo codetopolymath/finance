@@ -98,7 +98,7 @@ export function ReceiptConfirmForm({ parsed, imagePreviewUrl, onSaved, onCancel 
       <img src={imagePreviewUrl} alt="Receipt" className="max-h-48 w-full rounded-lg object-contain" />
 
       {!parsed.amountsMatch && (
-        <p className="flex items-center gap-2 text-sm text-amber-600">
+        <p className="flex items-center gap-2 text-sm text-warning">
           <AlertTriangle className="size-4 shrink-0" />
           The two amounts on the receipt didn't match — double-check before saving.
         </p>

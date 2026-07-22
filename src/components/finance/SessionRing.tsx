@@ -47,7 +47,7 @@ export function SessionRing({ progress, isBreak, label }: SessionRingProps) {
           strokeLinecap="round"
           className={cn(
             'fill-none transition-[stroke-dashoffset] duration-[950ms] ease-linear',
-            isBreak || overtime ? 'stroke-accent-warm' : 'stroke-primary',
+            overtime ? 'stroke-warning' : isBreak ? 'stroke-muted-foreground' : 'stroke-primary',
           )}
           style={{ strokeDasharray: CIRCUMFERENCE, strokeDashoffset: dashOffset }}
         />

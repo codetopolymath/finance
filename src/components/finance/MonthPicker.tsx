@@ -17,6 +17,7 @@ export function MonthPicker({ month, onChange }: MonthPickerProps) {
       <Button
         variant="outline"
         size="icon"
+        className="size-11"
         onClick={() => onChange(subMonths(month, 1))}
         aria-label="Previous month"
       >
@@ -26,6 +27,7 @@ export function MonthPicker({ month, onChange }: MonthPickerProps) {
       <Button
         variant="outline"
         size="icon"
+        className="size-11"
         onClick={() => onChange(addMonths(month, 1))}
         disabled={isCurrentMonth}
         aria-label="Next month"

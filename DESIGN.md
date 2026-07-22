@@ -26,7 +26,7 @@ stays on stock `text-sm`/`text-xs`:
 | Token | Size | Use |
 |---|---|---|
 | `text-2xs` | 11px | Dense metadata smaller than `text-xs` (UTRs, timestamps in tight rows) — replaces the ad hoc `text-[10px]`/`text-[11px]` arbitrary values scattered around the codebase |
-| `text-display` | 30px | Section-level stat numbers (StatCard values, MetricCard amounts, loan progress %) |
+| `text-display` | 30px | Section-level stat numbers (StatCard values, MetricCard amounts, loan progress %) and a single prominent value in a header/drawer context (TransactionDetailDrawer's amount) |
 | `text-hero` | 44px | The one true hero number per screen (NetHeroCard, and nowhere else) |
 
 ## Color
@@ -46,6 +46,12 @@ Established in the previous pass, documented here as the reference:
 - `--category-*` / `--amort-*` — fixed, colorblind-validated sets for the
   category breakdown and loan amortization charts. **Do not modify** without
   re-running the palette validation this pass didn't touch.
+- `--warning` — amber (`#b45309` light / `#fbbf24` dark). Caution/attention
+  signal for inline text and icons: a data mismatch, a session running
+  overtime. Distinct from `--accent-warm` in role even though both sit in
+  the amber family — `--warning` is only ever inline text/icon/stroke color,
+  **never a bold fill or badge background**, which is what keeps it from
+  reading as the same signal as a celebration moment.
 
 ## Elevation
 
@@ -87,6 +93,77 @@ consistently in Phase 3:
 - Duration convention: 150–300ms for micro-feedback, up to 600ms for
   entrances/count-ups. Ease-out for things appearing, no elastic/bounce
   outside the frog-hop and streak pop (their one deliberately playful beat).
+
+## Components
+
+- **Container = `Card`.** Any bordered content block (a section, a stat
+  tile, an automation entry, an inline error/empty message) is a
+  `Card`/`CardHeader`/`CardTitle`/`CardContent`, not a raw `div` with
+  `rounded-* border`. The base `Card` (`src/components/ui/card.tsx`) carries
+  `shadow-card` by default — new Cards get correct elevation for free; only
+  override to `shadow-hero` for the one hero element per screen, or drop the
+  shadow explicitly for a deliberately flat/nested card.
+  - Exception: dense **list rows** (`TaskRow`, `TransactionRow`, loan
+    installment rows, the transaction filter bar) are plain
+    `rounded-lg border` divs, not Cards — a list of many rows shouldn't carry
+    per-row card elevation. This is the one accepted non-Card container
+    pattern; anything else should be a Card.
+- **Stat tiles** (`MetricCard`, `CurrentAgeCard`, the Loans `StatCard`): a
+  `Card` with `gap-2 py-4`, a muted `text-sm font-normal` label in
+  `CardHeader`, and the value in `CardContent` at `text-display font-medium
+  tabular-nums`. Never `text-2xl` or another ad hoc size for a stat
+  value — always the `text-display` token.
+- **Buttons**: icon first, label second, as direct children (`<Icon />
+  Label`) — never label-only when an icon is available for the action. A
+  pending async action swaps the icon for `<Loader2 className="animate-spin"
+  />` and the label for a present-participle verb (`"Saving…"`,
+  `"Starting…"`), and disables the button. Real interactive controls keep a
+  minimum `size-11` / `h-11` tap target (see Spacing above).
+  - **Exception — dialog/form actions**: `Save`, `Cancel`, `Close`, `Done`,
+    `Retry` (drawer footers, `EmptyState`'s action) stay label-only. These
+    are universal, unambiguous actions where an icon adds visual noise
+    without adding clarity — unlike a primary CTA (`Upload receipt`, `Run
+    now`) where the icon reinforces exactly what the button does. Only this
+    closed set of generic dialog verbs qualifies; a new named action still
+    gets an icon.
+- **Toasts** (`sonner`, via `toast.success`/`toast.error`): success confirms
+  the action in plain language; error messages use
+  `error instanceof Error ? error.message : '<specific fallback naming the
+  action>'` — never a generic "Something went wrong."
+
+## Page states
+
+Every route that reads async data (`useTransactions`, `useLoans`, etc.)
+follows the same three-state shape — copy this structure for new routes
+rather than inventing another loading/error/empty pattern:
+
+- **Loading** (`isPending`): a `<RouteNameSkeleton />` built from `Skeleton`
+  blocks shaped like the real layout (matching card heights/columns), not a
+  single generic spinner.
+- **Error** (`isError`): `<EmptyState icon={AlertTriangle} title="Couldn't
+  load <thing>" description="Check your connection, or sign in again if
+  your session expired." action={{ label: 'Retry', onClick: () => refetch()
+  }} />`.
+- **Empty** (no error, but no data): `EmptyState` with an icon and copy
+  specific to what's missing — never reuse the error copy for an empty
+  result.
+
+## Governance
+
+**DESIGN.md is the single source of truth for this project's UI/UX.** Any
+new UI component or UX pattern must be checked against this document before
+being implemented:
+
+- If it fits an existing token/pattern documented here, use it — don't
+  introduce a parallel one-off (a new ad hoc shadow, a new stat-card shape, a
+  new loading pattern, etc.).
+- If the task genuinely needs something this document doesn't cover, **stop
+  before writing code**: tell the user what's missing or would deviate, propose
+  how it should extend the system (new token vs. one-off exception), and get
+  their feedback. Only implement the new UI/UX after that's resolved.
+- When a change *does* extend the system (a new token, a new component
+  pattern), update this document in the same change — DESIGN.md should never
+  drift behind the code it's supposed to govern.
 
 ## What's out of scope for this pass
 

@@ -48,7 +48,7 @@ export function BottomNav() {
                 to={item.url}
                 aria-current={isActive ? 'page' : undefined}
                 className={cn(
-                  'flex h-14 flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-transform duration-100 active:scale-95 active:bg-muted motion-reduce:active:scale-100',
+                  'flex h-14 flex-col items-center justify-center gap-0.5 text-2xs font-medium transition-transform duration-100 active:scale-95 active:bg-muted motion-reduce:active:scale-100',
                   isActive ? 'text-primary' : 'text-muted-foreground',
                 )}
               >
@@ -62,7 +62,7 @@ export function BottomNav() {
             aria-current={isMoreActive ? 'page' : undefined}
             onClick={() => setMoreOpen(true)}
             className={cn(
-              'flex h-14 flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-transform duration-100 active:scale-95 active:bg-muted motion-reduce:active:scale-100',
+              'flex h-14 flex-col items-center justify-center gap-0.5 text-2xs font-medium transition-transform duration-100 active:scale-95 active:bg-muted motion-reduce:active:scale-100',
               isMoreActive ? 'text-primary' : 'text-muted-foreground',
             )}
           >

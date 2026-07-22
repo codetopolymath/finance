@@ -75,7 +75,7 @@ export function SpendHeatmap({ data }: { data: HeatmapCell[] }) {
       >
         <div />
         {Array.from({ length: cols }, (_, col) => (
-          <div key={col} className="text-center text-[10px] text-muted-foreground">
+          <div key={col} className="text-center text-2xs text-muted-foreground">
             {hourTicks.includes(col * hoursPerCol) ? formatHour(col * hoursPerCol) : ''}
           </div>
         ))}
@@ -108,7 +108,7 @@ export function SpendHeatmap({ data }: { data: HeatmapCell[] }) {
         ))}
       </div>
 
-      <div className="mt-3 flex items-center justify-between gap-3 text-[10px] text-muted-foreground">
+      <div className="mt-3 flex items-center justify-between gap-3 text-2xs text-muted-foreground">
         <p className="min-h-4 text-xs">
           {selected ? cellSummary(selected.day, selected.col, grid[selected.day][selected.col]) : ''}
         </p>

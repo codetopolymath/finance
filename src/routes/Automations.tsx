@@ -4,6 +4,7 @@ import { formatDistanceToNow } from 'date-fns'
 import { Loader2, LogOut, PlayCircle, Receipt, Sparkles, User } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
 import { AutomationCard } from '@/components/finance/AutomationCard'
@@ -95,34 +96,38 @@ function AccountSection() {
   const { dataUpdatedAt } = useTransactions()
 
   return (
-    <div className="flex flex-col gap-2 rounded-xl border p-4">
-      <h2 className="text-sm font-medium">Account</h2>
-      {session?.user.email && <p className="truncate text-xs text-muted-foreground">{session.user.email}</p>}
-      {dataUpdatedAt > 0 && (
-        <p className="truncate text-xs text-muted-foreground">
-          Synced {formatDistanceToNow(dataUpdatedAt, { addSuffix: true })}
-        </p>
-      )}
-      <Separator className="my-1" />
-      <div className="flex flex-wrap gap-2">
-        <Button variant="outline" asChild className="w-fit">
-          <Link to="/profile">
-            <User />
-            View profile
-          </Link>
-        </Button>
-        <Button variant="outline" onClick={signOut} className="w-fit">
-          <LogOut />
-          Sign out
-        </Button>
-      </div>
-    </div>
+    <Card className="gap-3">
+      <CardHeader>
+        <CardTitle className="text-sm font-medium">Account</CardTitle>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-2">
+        {session?.user.email && <p className="truncate text-xs text-muted-foreground">{session.user.email}</p>}
+        {dataUpdatedAt > 0 && (
+          <p className="truncate text-xs text-muted-foreground">
+            Synced {formatDistanceToNow(dataUpdatedAt, { addSuffix: true })}
+          </p>
+        )}
+        <Separator className="my-1" />
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" asChild className="w-fit">
+            <Link to="/profile">
+              <User />
+              View profile
+            </Link>
+          </Button>
+          <Button variant="outline" onClick={signOut} className="w-fit">
+            <LogOut />
+            Sign out
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   )
 }
 
 export default function Automations() {
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-6">
       <SpendcheckCard />
       <DayCleanupCard />
       <ReceiptCaptureCard />
