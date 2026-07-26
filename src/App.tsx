@@ -19,6 +19,7 @@ const Automations = lazy(() => import('@/routes/Automations'))
 const ReceiptCapture = lazy(() => import('@/routes/ReceiptCapture'))
 const Profile = lazy(() => import('@/routes/Profile'))
 const Focus = lazy(() => import('@/routes/Focus'))
+const Goals = lazy(() => import('@/routes/Goals'))
 
 const PAGE_TITLES: Record<string, string> = {
   '/': 'Dashboard',
@@ -29,6 +30,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/automations/receipt': 'Add from Receipt',
   '/profile': 'Profile',
   '/focus': 'Focus',
+  '/goals': 'Goals',
 }
 
 function App() {
@@ -70,6 +72,7 @@ function App() {
               <Route path="/automations/receipt" element={<ReceiptCapture />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/focus" element={<Focus />} />
+              <Route path="/goals" element={<Goals />} />
             </Routes>
           </Suspense>
         </div>
