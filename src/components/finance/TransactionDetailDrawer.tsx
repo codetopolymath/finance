@@ -14,7 +14,9 @@ import { Separator } from '@/components/ui/separator'
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
@@ -22,7 +24,8 @@ import { Textarea } from '@/components/ui/textarea'
 import { Amount } from '@/components/finance/Amount'
 import { FlowTypeBadge } from '@/components/finance/FlowTypeBadge'
 import { useIsMobile } from '@/hooks/use-mobile'
-import { useTransactionFilterOptions, useUpdateTransaction } from '@/lib/queries'
+import { CATEGORY_GROUPS } from '@/lib/categoryTaxonomy'
+import { useUpdateTransaction } from '@/lib/queries'
 import { formatDateTime } from '@/lib/format'
 import type { Transaction } from '@/types/transaction'
 
@@ -151,14 +154,12 @@ function TransactionEditForm({
 }) {
   const [category, setCategory] = useState(transaction.category)
   const [note, setNote] = useState(transaction.note ?? '')
-  const { data: filterOptions } = useTransactionFilterOptions()
   const update = useUpdateTransaction()
 
-  // The picker offers existing categories only; make sure the current value is
-  // always present even if the options query hasn't landed yet.
-  const categories = filterOptions?.categories.includes(transaction.category)
-    ? filterOptions.categories
-    : [transaction.category, ...(filterOptions?.categories ?? [])]
+  // The current value might be a legacy category string outside the
+  // canonical taxonomy (e.g. old "P2P" vs. today's "P2P Transfer") — keep it
+  // selectable so saving without changing the category doesn't drop it.
+  const isLegacyCategory = !CATEGORY_GROUPS.some(({ categories }) => categories.includes(transaction.category))
 
   const save = () => {
     const trimmedNote = note.trim() || null
@@ -180,10 +181,21 @@ function TransactionEditForm({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {categories.map((c) => (
-                <SelectItem key={c} value={c}>
-                  {c}
-                </SelectItem>
+              {isLegacyCategory && (
+                <SelectGroup>
+                  <SelectLabel>Current</SelectLabel>
+                  <SelectItem value={transaction.category}>{transaction.category}</SelectItem>
+                </SelectGroup>
+              )}
+              {CATEGORY_GROUPS.map(({ group, categories }) => (
+                <SelectGroup key={group}>
+                  <SelectLabel>{group}</SelectLabel>
+                  {categories.map((c) => (
+                    <SelectItem key={c} value={c}>
+                      {c}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
               ))}
             </SelectContent>
           </Select>

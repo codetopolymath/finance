@@ -7,11 +7,14 @@ import { Textarea } from '@/components/ui/textarea'
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
 import { DateScopedTransactionPicker } from '@/components/finance/DateScopedTransactionPicker'
+import { CATEGORY_GROUPS } from '@/lib/categoryTaxonomy'
 import { useTransactionFilterOptions } from '@/lib/queries'
 import { supabase } from '@/lib/supabase'
 import type { ParsedReceipt } from '@/types/receipt'
@@ -132,10 +135,15 @@ export function ReceiptConfirmForm({ parsed, imagePreviewUrl, onSaved, onCancel 
             <SelectValue placeholder="Choose a category" />
           </SelectTrigger>
           <SelectContent>
-            {filterOptions?.categories.map((c) => (
-              <SelectItem key={c} value={c}>
-                {c}
-              </SelectItem>
+            {CATEGORY_GROUPS.map(({ group, categories }) => (
+              <SelectGroup key={group}>
+                <SelectLabel>{group}</SelectLabel>
+                {categories.map((c) => (
+                  <SelectItem key={c} value={c}>
+                    {c}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
             ))}
           </SelectContent>
         </Select>

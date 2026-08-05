@@ -1,6 +1,7 @@
 import { endOfMonth, isWithinInterval, startOfDay, startOfMonth, startOfWeek } from 'date-fns'
 import type { Transaction } from '@/types/transaction'
 import { getFlowTypeMeta } from './flowType'
+import { getCategoryGroup } from './categoryTaxonomy'
 
 export function filterByMonth(transactions: Transaction[], monthDate: Date): Transaction[] {
   const interval = { start: startOfMonth(monthDate), end: endOfMonth(monthDate) }
@@ -53,6 +54,24 @@ export function categoryBreakdown(transactions: Transaction[]): CategoryTotal[] 
       existing.count += 1
     } else {
       totals.set(t.category, { category: t.category, total: t.amount, count: 1 })
+    }
+  }
+  return [...totals.values()].sort((a, b) => b.total - a.total)
+}
+
+/** Same as categoryBreakdown, but rolled up by taxonomy group instead of raw
+ * category — the `category` field holds the group name. */
+export function categoryGroupBreakdown(transactions: Transaction[]): CategoryTotal[] {
+  const totals = new Map<string, CategoryTotal>()
+  for (const t of transactions) {
+    if (!isDiscretionarySpend(t)) continue
+    const group = getCategoryGroup(t.category)
+    const existing = totals.get(group)
+    if (existing) {
+      existing.total += t.amount
+      existing.count += 1
+    } else {
+      totals.set(group, { category: group, total: t.amount, count: 1 })
     }
   }
   return [...totals.values()].sort((a, b) => b.total - a.total)

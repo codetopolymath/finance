@@ -4,6 +4,7 @@ import { AlertTriangle, ArrowRight, Receipt } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { EmptyState } from '@/components/finance/EmptyState'
 import { MetricCard } from '@/components/finance/MetricCard'
 import { NetHeroCard } from '@/components/finance/NetHeroCard'
@@ -14,17 +15,19 @@ import { TransactionDetailDrawer } from '@/components/finance/TransactionDetailD
 import { CurrentAgeCard } from '@/components/finance/CurrentAgeCard'
 import { useFadeInStagger } from '@/hooks/use-fade-in-stagger'
 import { useTransactions } from '@/lib/queries'
-import { categoryBreakdown, filterByMonth, summarize } from '@/lib/selectors'
+import { categoryBreakdown, categoryGroupBreakdown, filterByMonth, summarize } from '@/lib/selectors'
 import type { Transaction } from '@/types/transaction'
 
 export default function Dashboard() {
   const { data, isPending, isError, refetch } = useTransactions()
   const [month, setMonth] = useState(() => new Date())
   const [selected, setSelected] = useState<Transaction | null>(null)
+  const [breakdownView, setBreakdownView] = useState<'category' | 'group'>('category')
 
   const monthTransactions = useMemo(() => (data ? filterByMonth(data, month) : []), [data, month])
   const summary = useMemo(() => summarize(monthTransactions), [monthTransactions])
   const categories = useMemo(() => categoryBreakdown(monthTransactions), [monthTransactions])
+  const categoryGroups = useMemo(() => categoryGroupBreakdown(monthTransactions), [monthTransactions])
   const recent = monthTransactions.slice(0, 8)
   const fadeRef = useFadeInStagger<HTMLDivElement>([month])
 
@@ -61,11 +64,25 @@ export default function Dashboard() {
 
       <div data-fade-item className="grid grid-cols-1 gap-4 lg:grid-cols-5">
         <Card className="lg:col-span-2 shadow-card">
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-base font-medium">Where it went</CardTitle>
+            <ToggleGroup
+              type="single"
+              value={breakdownView}
+              onValueChange={(v) => v && setBreakdownView(v as 'category' | 'group')}
+              variant="outline"
+              size="sm"
+            >
+              <ToggleGroupItem value="category">By category</ToggleGroupItem>
+              <ToggleGroupItem value="group">By group</ToggleGroupItem>
+            </ToggleGroup>
           </CardHeader>
           <CardContent>
-            <CategoryBreakdownChart data={categories} month={month} />
+            <CategoryBreakdownChart
+              data={breakdownView === 'group' ? categoryGroups : categories}
+              month={month}
+              linkable={breakdownView === 'category'}
+            />
           </CardContent>
         </Card>
 

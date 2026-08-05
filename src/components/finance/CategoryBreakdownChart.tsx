@@ -8,7 +8,15 @@ import { formatCurrency } from '@/lib/format'
 import { assignCategoryColors } from '@/lib/categoryColor'
 import type { CategoryTotal } from '@/lib/selectors'
 
-export function CategoryBreakdownChart({ data, month }: { data: CategoryTotal[]; month: Date }) {
+interface CategoryBreakdownChartProps {
+  data: CategoryTotal[]
+  month: Date
+  /** False when `data.category` isn't a real, filterable category value (e.g.
+   * a taxonomy group name) — rows render without the drill-into-Transactions link. */
+  linkable?: boolean
+}
+
+export function CategoryBreakdownChart({ data, month, linkable = true }: CategoryBreakdownChartProps) {
   const containerRef = useRef<HTMLDivElement | null>(null)
 
   useGSAP(
@@ -70,9 +78,12 @@ export function CategoryBreakdownChart({ data, month }: { data: CategoryTotal[];
           </div>
         )
 
-        if (item.isOther) {
+        if (item.isOther || !linkable) {
           return (
-            <div key={item.category} title="Includes several smaller categories">
+            <div
+              key={item.category}
+              title={item.isOther ? 'Includes several smaller categories' : undefined}
+            >
               {row}
             </div>
           )
