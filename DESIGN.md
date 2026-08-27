@@ -108,6 +108,13 @@ consistently in Phase 3:
     `rounded-lg border` divs, not Cards — a list of many rows shouldn't carry
     per-row card elevation. This is the one accepted non-Card container
     pattern; anything else should be a Card.
+  - **Optional grouping within a list** (`GoalGroupSection`, folders in
+    Goals): no extra Card wrapper — a plain `text-sm font-medium
+    text-muted-foreground` heading (with a `(count)` suffix) above that
+    group's rows, and an ungrouped/default section rendered flat with no
+    heading unless at least one named group exists alongside it. Keeps a
+    flat single-item list looking exactly as plain as before grouping
+    existed, per-group chrome only appears once it's actually needed.
 - **Stat tiles** (`MetricCard`, `CurrentAgeCard`, the Loans `StatCard`): a
   `Card` with `gap-2 py-4`, a muted `text-sm font-normal` label in
   `CardHeader`, and the value in `CardContent` at `text-display font-medium

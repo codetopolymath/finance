@@ -11,8 +11,9 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useIsMobile } from '@/hooks/use-mobile'
-import { useDeleteGoal, useUpdateGoal } from '@/lib/goalsQueries'
+import { useDeleteGoal, useGoalGroups, useUpdateGoal } from '@/lib/goalsQueries'
 import type { Goal } from '@/types/goals'
 
 interface GoalDetailDrawerProps {
@@ -41,6 +42,7 @@ function DrawerBody({ goal, onDeleted }: { goal: Goal; onDeleted: () => void }) 
   const [why, setWhy] = useState(goal.why ?? '')
   const [confirmingDelete, setConfirmingDelete] = useState(false)
 
+  const { data: groups } = useGoalGroups()
   const update = useUpdateGoal()
   const deleteGoal = useDeleteGoal()
 
@@ -48,6 +50,10 @@ function DrawerBody({ goal, onDeleted }: { goal: Goal; onDeleted: () => void }) 
     const trimmed = title.trim()
     if (!trimmed) return
     update.mutate({ id: goal.id, patch: { title: trimmed, why: why.trim() || null } })
+  }
+
+  const moveToGroup = (value: string) => {
+    update.mutate({ id: goal.id, patch: { group_id: value === 'none' ? null : Number(value) } })
   }
 
   return (
@@ -85,6 +91,27 @@ function DrawerBody({ goal, onDeleted }: { goal: Goal; onDeleted: () => void }) 
             enterKeyHint="done"
           />
         </div>
+
+        {groups && groups.length > 0 && (
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="goal-folder" className="text-muted-foreground">
+              Folder
+            </label>
+            <Select value={goal.group_id === null ? 'none' : String(goal.group_id)} onValueChange={moveToGroup}>
+              <SelectTrigger id="goal-folder" className="h-11 w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">No folder</SelectItem>
+                {groups.map((group) => (
+                  <SelectItem key={group.id} value={String(group.id)}>
+                    {group.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
       </div>
 
       <DrawerFooter className="pb-[calc(1rem+env(safe-area-inset-bottom))]">
