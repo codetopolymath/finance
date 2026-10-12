@@ -8,6 +8,7 @@ import {
   Zap,
   Target,
   Milestone,
+  Wind,
   MoreHorizontal,
   User,
 } from 'lucide-react'
@@ -23,6 +24,7 @@ const PRIMARY_NAV_ITEMS = [
 
 const MORE_NAV_ITEMS = [
   { title: 'Goals', url: '/goals', icon: Milestone },
+  { title: 'Pause', url: '/pause', icon: Wind },
   { title: 'Loans', url: '/loans', icon: Landmark },
   { title: 'Automations', url: '/automations', icon: Zap },
   { title: 'Profile', url: '/profile', icon: User },

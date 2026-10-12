@@ -20,6 +20,7 @@ const ReceiptCapture = lazy(() => import('@/routes/ReceiptCapture'))
 const Profile = lazy(() => import('@/routes/Profile'))
 const Focus = lazy(() => import('@/routes/Focus'))
 const Goals = lazy(() => import('@/routes/Goals'))
+const Pause = lazy(() => import('@/routes/Pause'))
 
 const PAGE_TITLES: Record<string, string> = {
   '/': 'Dashboard',
@@ -31,6 +32,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/profile': 'Profile',
   '/focus': 'Focus',
   '/goals': 'Goals',
+  '/pause': 'Pause',
 }
 
 function App() {
@@ -73,6 +75,7 @@ function App() {
               <Route path="/profile" element={<Profile />} />
               <Route path="/focus" element={<Focus />} />
               <Route path="/goals" element={<Goals />} />
+              <Route path="/pause" element={<Pause />} />
             </Routes>
           </Suspense>
         </div>

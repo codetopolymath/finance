@@ -66,6 +66,11 @@
    * #fcfcfc; the dark block below re-picks the green for the dark band. */
   --amort-principal: #10b981;
   --amort-interest: #3b82f6;
+  /* Pause section's single data hue (ember, from the watch app). Neutral by
+   * design — it never reads as good or bad. Heatmaps derive their ramp from
+   * it with color-mix, like SpendHeatmap does with --chart-1. Validated with
+   * scripts/validate_palette.js against #fcfcfc (light) and #171717 (dark). */
+  --pause: #d4600a;
   --font-sans: "Outfit", ui-sans-serif, sans-serif;
   --font-mono: ui-monospace, "SF Mono", Consolas, monospace;
 
@@ -130,6 +135,7 @@
      * sits above the dark lightness band, so it steps down one notch. */
     --amort-principal: #0ea371;
     --amort-interest: #3b82f6;
+    --pause: #e0690f;
     --shadow-hero-value: 0 8px 30px -10px rgb(45 212 160 / 0.3), 0 2px 8px -2px rgb(0 0 0 / 0.3);
   }
 }
@@ -165,6 +171,7 @@
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
+  --color-pause: var(--pause);
   --font-sans: var(--font-sans);
   --font-mono: var(--font-mono);
   --radius-sm: calc(var(--radius) - 4px);

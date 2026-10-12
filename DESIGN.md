@@ -53,6 +53,15 @@ Established in the previous pass, documented here as the reference:
   **never a bold fill or badge background**, which is what keeps it from
   reading as the same signal as a celebration moment.
 
+- `--pause` — ember (`#d4600a` light / `#e0690f` dark). The **Pause**
+  section's single data hue (counts, bars, heatmap). Deliberately neutral:
+  Pause *describes* a pattern and never judges it, so it uses neither
+  `--primary`/`--success` (good) nor `--destructive` (bad). One hue only —
+  magnitude ramps are derived with `color-mix(in oklch, var(--pause) N%,
+  var(--muted))`, the same technique as `SpendHeatmap`. Validated with the
+  dataviz script against both card surfaces. Brand identity dots inside Pause
+  are not colored (see Pause below) so no categorical set is needed.
+
 ## Elevation
 
 - `shadow-card` — a touch more lift than shadcn's stock `shadow-sm`, for
@@ -137,6 +146,23 @@ consistently in Phase 3:
   the action in plain language; error messages use
   `error instanceof Error ? error.message : '<specific fallback naming the
   action>'` — never a generic "Something went wrong."
+
+## Pause (smoke-log section)
+
+Reads the `pausewatch` schema (watch app data), read-only. Reuses existing
+patterns; the only new token is `--pause`.
+
+- **Tone:** wording describes, never judges ("Most logs around 3pm", not
+  "You smoke too much"). No `--destructive`, no `--success` on counts.
+  `--accent-warm` stays reserved for genuine good moments (e.g. a day under
+  the 7-day average) — never for a bad day.
+- **Hero:** today's count in the `NetHeroCard` shape (`text-hero`,
+  `shadow-hero`, `rounded-2xl`) with the number in `--pause`.
+- **Tiles:** standard stat tiles (`text-display`). Tar/nicotine values are
+  machine-test estimates (India prints none) so they always carry a `~`.
+- **Charts:** one axis, `--pause` as the only hue, 2px gaps, hover/tap
+  summary line as in `SpendHeatmap`.
+- **Nav:** lives in the "More" sheet, not the primary 4 tabs.
 
 ## Page states
 
