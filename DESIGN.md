@@ -161,7 +161,14 @@ patterns; the only new token is `--pause`.
 - **Tiles:** standard stat tiles (`text-display`). Tar/nicotine values are
   machine-test estimates (India prints none) so they always carry a `~`.
 - **Charts:** one axis, `--pause` as the only hue, 2px gaps, hover/tap
-  summary line as in `SpendHeatmap`.
+  summary line as in `SpendHeatmap`. Tar and nicotine are separate measures
+  on a toggle, never two series on one chart (different scales). The count
+  chart's 7-day average is the one secondary series: a dashed
+  `--muted-foreground` line, with a legend.
+- **Views:** a full-width `ToggleGroup` (`h-11` items) switches Today /
+  Trend / Rhythm. Today scopes to a day via `PauseDayPicker` (prev/next
+  buttons plus a `Calendar` popover, future days blocked); Trend and Rhythm
+  scope to a month via the shared `MonthPicker`, same as Insights.
 - **Nav:** lives in the "More" sheet, not the primary 4 tabs.
 
 ## Page states
